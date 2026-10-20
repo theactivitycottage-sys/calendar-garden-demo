@@ -1,0 +1,2472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Spring Gardens Memory Care — Web Readiness Demo</title>
+<style>
+  :root{
+    --ink:#34423e;
+    --muted:#6f7b76;
+    --sage:#8ea293;
+    --sage2:#dfe8e1;
+    --cream:#f7f4ec;
+    --paper:#ffffff;
+    --gold:#d9c07e;
+    --blue:#6e8797;
+    --red:#9e5e58;
+    --line:#d8ddd9;
+    --soft:#f3f6f3;
+    --warn:#f4ead0;
+    --warnink:#765d1e;
+    --danger:#f7e0dd;
+    --dangerink:#8c4038;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    color:var(--ink);
+    background:linear-gradient(180deg,#f8f7f2,#eef2ee);
+  }
+  header{
+    background:var(--paper);
+    border-bottom:1px solid var(--line);
+    padding:18px 24px 14px;
+    position:sticky;
+    top:0;
+    z-index:20;
+  }
+  .brand{display:flex;align-items:flex-end;justify-content:space-between;gap:20px}
+  .brand h1{margin:0;font-family:Georgia,serif;font-size:30px;font-weight:600;letter-spacing:.2px}
+  .brand small{color:var(--muted);font-size:13px}
+  nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  nav button,.seg button,.btn{
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--ink);
+    border-radius:999px;
+    padding:9px 14px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  nav button.active,.seg button.active,.btn.primary{
+    background:var(--ink);
+    color:white;
+    border-color:var(--ink);
+  }
+  .btn.soft{background:var(--sage2)}
+  .btn.warn{background:var(--warn);color:var(--warnink);border-color:#ead6a3}
+  .btn.danger{background:var(--danger);color:var(--dangerink);border-color:#efc6c0}
+  main{padding:22px;max-width:1500px;margin:0 auto}
+  section.screen{display:none}
+  section.screen.active{display:block}
+  .toolbar{
+    display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;
+    margin-bottom:16px;
+  }
+  .toolbar .left,.toolbar .right{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .card{
+    background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;
+    box-shadow:0 8px 24px rgba(54,70,64,.06)
+  }
+  .grid2{display:grid;grid-template-columns:1.1fr .9fr;gap:16px}
+  @media(max-width:1000px){.grid2{grid-template-columns:1fr}}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+  .pill{display:inline-block;padding:4px 8px;border-radius:999px;background:var(--soft);font-size:12px;font-weight:700;margin:2px 3px 2px 0}
+  .pill.al{background:#e7efe9}
+  .pill.mc{background:#e5ebf2}
+  .pill.both{background:#f0ead9}
+  .pill.internal{background:#ececec}
+  .month-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+  .month-title{font-family:Georgia,serif;font-size:28px}
+  .calendar{
+    display:grid;grid-template-columns:repeat(7,1fr);border:1px solid var(--line);background:#fff
+  }
+  .dow{
+    padding:10px;background:#6e7472;color:#fff;text-align:center;font-weight:800;font-size:13px
+  }
+  .day{
+    min-height:150px;border-right:1px solid var(--line);border-top:1px solid var(--line);
+    padding:7px;background:#fff;position:relative
+  }
+  .day:nth-child(7n){border-right:none}
+  .day.outside{background:#f5f5f3;color:#8b8b87}
+  .day.outside .event{opacity:.64}
+  .day.outside .event:hover{opacity:.9}
+  .day.outside .date{color:#777}
+  .day.outside .date.outside-link{cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px}
+  .day.outside .date.outside-link:hover{color:#333}
+  .date{font-weight:800;font-size:13px;margin-bottom:6px}
+  .event{
+    font-size:11px;line-height:1.2;padding:4px 5px;border-radius:6px;margin:3px 0;
+    background:#eef3ef;border-left:3px solid var(--sage);cursor:pointer
+  }
+  .event.mc{background:#edf2f8;border-left-color:var(--blue)}
+  .event.both{background:#f7f1df;border-left-color:var(--gold)}
+  .event.internal{background:#eee;color:#666;border-left-color:#888}
+  .event.warning{background:#ffd6d2 !important;border-left:6px solid #a80700 !important;outline:3px solid #d11a0b !important;color:#650b05}
+  .event.warning .conflict-badge{display:inline-block;margin-left:5px;padding:2px 6px;border-radius:999px;background:#a80700;color:#fff;font-size:9px;font-weight:900;letter-spacing:.04em;vertical-align:1px}
+  .event.cancelled{background:#e5e7eb !important;border-left:6px solid #374151 !important;outline:2px solid #6b7280 !important;color:#374151;opacity:1}
+  .event.cancelled .cancel-badge{display:inline-block;margin-left:5px;padding:2px 6px;border-radius:999px;background:#374151;color:#fff;font-size:9px;font-weight:900;letter-spacing:.04em;vertical-align:1px;text-decoration:none}
+  .event.cancelled .event-main{text-decoration:line-through}
+  .event.schedule-check{background:#fff0b8 !important;border-left:6px solid #d97706 !important;outline:2px solid #f59e0b !important;color:#713f12}
+  .review-status{display:inline-flex;align-items:center;gap:6px;margin-top:7px;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:800;border:1px solid #cfd8d2;background:#eef6f0;color:#285b36}
+  .review-status.needs{background:#fff0ed;border-color:#e2a49a;color:#8b2d22}
+  .review-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:9px}
+  .event .schedule-check-badge{display:inline-block;margin-left:5px;padding:2px 6px;border-radius:999px;background:#c96a00;color:#fff;font-size:9px;font-weight:900;letter-spacing:.04em;vertical-align:1px}
+  .event.reviewed-overlap{background:#dbeafe !important;border-left:6px solid #2563eb !important;outline:2px solid #60a5fa !important;color:#1e3a8a}
+  .event .reviewed-badge{display:inline-block;margin-left:5px;padding:2px 6px;border-radius:999px;background:#2563eb;color:#fff;font-size:9px;font-weight:900;letter-spacing:.04em;vertical-align:1px}
+  .schedule-review{border:1px solid #e0b45b;background:#fff8e8;border-radius:10px;padding:10px;margin-top:8px}
+  .schedule-review .pair{margin-top:6px;font-size:13px}
+  .event .t{font-weight:800}
+  .event .lock{float:right}
+  .legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:10px}
+  .swatch{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px}
+  .notice{
+    padding:11px 12px;border-radius:10px;background:var(--warn);color:var(--warnink);margin:8px 0
+  }
+  .ok{background:#e8f1e9;color:#3b6541}
+  .week-preview{
+    background:white;border:1px solid var(--line);padding:14px;border-radius:14px
+  }
+  .print-sheet{
+    aspect-ratio:11/8.5;
+    width:100%;
+    background:#fff;
+    border:1px solid #bbb;
+    padding:20px;
+    box-shadow:0 8px 25px rgba(0,0,0,.08)
+  }
+  .print-title{display:flex;justify-content:flex-end;align-items:flex-end;margin-bottom:14px}
+  .print-title h2{font-family:var(--weekly-title-font,Arial,sans-serif);font-size:var(--weekly-title-size,24pt);font-weight:400;letter-spacing:.04em;margin:0;color:#5f625f}
+  .print-title strong{font-family:var(--weekly-title-font,Arial,sans-serif);font-size:var(--weekly-title-size,24pt)!important}
+  .week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;height:calc(100% - 62px)}
+  .wday{border:1px solid #aaa;display:flex;flex-direction:column;min-width:0}
+  .wday h3{margin:0;background:var(--weekly-day-bg,#8d8f8e);color:var(--weekly-day-text,#fff);text-align:center;padding:8px 4px;font-size:var(--weekly-day-font-size,14px)}
+  .wdate{text-align:center;font-weight:800;padding:5px 0;border-bottom:1px solid #aaa;background:var(--weekly-date-bg,#fff);color:var(--weekly-date-text,#1f2a24)}
+  .witems{padding:7px;overflow:hidden;font-size:var(--resident-font-size,16pt);line-height:1.18;color:var(--weekly-text-color,#1f2a24);font-family:var(--weekly-font-family,Arial,sans-serif);text-align:var(--weekly-text-align,left)}
+  .witem{margin:0 0 8px;color:inherit}
+  .witem .time{font-weight:900}
+  .witem.shared{background:var(--weekly-highlight-bg,#f4f0df);color:inherit;padding:3px}
+  .weekly-toolbar-grid{display:grid;grid-template-columns:minmax(190px,.7fr) minmax(220px,.85fr) minmax(560px,2.1fr) auto;gap:16px;align-items:start;width:100%}
+  .weekly-toolbar-title h2{margin:0 0 12px}
+  .weekly-week-picker{max-width:180px}
+  .weekly-week-picker label,.weekly-basic-options label,.weekly-style-card label{display:block}
+  .weekly-basic-options{display:grid;gap:8px}
+  .weekly-style-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 8px 24px rgba(54,70,64,.06)}
+  .weekly-style-card h3{margin:0 0 10px;font-size:16px}
+  .weekly-style-grid{display:grid;grid-template-columns:repeat(3,minmax(135px,1fr));gap:10px}
+  .weekly-style-grid input[type=color]{height:40px;padding:3px;cursor:pointer}
+  .weekly-print-action{display:flex;justify-content:flex-end;align-items:flex-start;padding-top:2px}
+  @media(max-width:1250px){.weekly-toolbar-grid{grid-template-columns:1fr 1fr}.weekly-style-card{grid-column:1 / -1}.weekly-print-action{grid-column:2;grid-row:1;justify-self:end}.weekly-style-grid{grid-template-columns:repeat(3,minmax(125px,1fr))}}
+  @media(max-width:760px){.weekly-toolbar-grid{grid-template-columns:1fr}.weekly-style-card,.weekly-print-action{grid-column:auto;grid-row:auto}.weekly-print-action{justify-self:start}.weekly-style-grid{grid-template-columns:repeat(2,minmax(130px,1fr))}}
+  .editor label{display:block;font-size:12px;font-weight:800;color:var(--muted);margin:10px 0 4px}
+  input,select,textarea{
+    width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)
+  }
+  .formrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .checks{display:flex;gap:10px;flex-wrap:wrap}
+  .checks label{font-weight:600;color:var(--ink);margin:0}
+  .checks input{width:auto}
+  dialog{
+    border:none;border-radius:16px;padding:0;max-width:620px;width:calc(100% - 24px);
+    box-shadow:0 22px 70px rgba(0,0,0,.25)
+  }
+  dialog::backdrop{background:rgba(25,35,31,.45)}
+  .modal-head{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+  .modal-body{padding:18px}
+  .modal-actions{padding:14px 18px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px}
+  .x{border:none;background:none;font-size:26px;cursor:pointer}
+  .tiny{font-size:12px;color:var(--muted)}
+  .statrow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+  .stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}
+  .stat b{display:block;font-size:24px;font-family:Georgia,serif}
+  @media(max-width:800px){.statrow{grid-template-columns:1fr 1fr}.calendar{font-size:10px}.day{min-height:110px}}
+  @media print{
+    body{background:#fff}
+    header, .no-print, #activity, #master, .toolbar, .legend, .week-preview > .no-print{display:none!important}
+    main{padding:0;max-width:none}
+    #preview{display:block!important}
+    .week-preview{border:none;padding:0}
+    .print-sheet{box-shadow:none;border:none;width:11in;height:8.5in;padding:.2in}
+    @page{size:11in 8.5in landscape;margin:0}
+  }
+#printPage{box-sizing:border-box;margin:0 auto;background:white;overflow:hidden;--resident-font-size:16pt}
+#printPage.landscape{width:11in;min-height:8.5in}
+#printPage.portrait{width:8.5in;min-height:11in}
+#printPage td,#printPage li,#printPage .event,#printPage .dayCell{font-size:var(--resident-font-size)}
+
+#printPage{font-size:var(--resident-font-size,16pt) !important;}
+#printPage *{font-size:inherit;}
+#printPage .tiny{font-size:0.82em !important;}
+#printPage h1{font-size:1.55em !important;}
+#printPage h2{font-size:1.25em !important;}
+#printPage h3{font-size:1.1em !important;}
+
+#printSheet{
+  box-sizing:border-box !important;
+  margin:0 auto !important;
+  background:#fff !important;
+  --resident-font-size:16pt;
+}
+#printSheet.landscape{width:11in !important;min-height:8.5in !important;}
+#printSheet.portrait{width:8.5in !important;min-height:11in !important;}
+#printSheet .activity,
+#printSheet .event,
+#printSheet .day-events,
+#printSheet td li,
+#printSheet td .activity,
+#printSheet .activity-name{
+  font-size:var(--resident-font-size) !important;
+  line-height:1.18 !important;
+}
+
+  .monthly-print-sheet{box-sizing:border-box;width:11in;min-height:8.5in;margin:12px auto;background:#fff;padding:.22in;border:1px solid #ddd;--monthly-font-size:12pt;--monthly-title-font:Georgia,serif;--monthly-title-size:60pt;--monthly-font-family:Arial,sans-serif;--monthly-text-align:left;--monthly-text-color:#1f2a24;--monthly-day-bg:#8d8f8e;--monthly-day-text:#ffffff;--monthly-day-font-size:14px;--monthly-date-bg:#ffffff;--monthly-date-text:#1f2a24;--monthly-highlight-bg:#f4f0df}
+  .monthly-print-title{text-align:center;margin-bottom:10px}
+  .monthly-print-title h2{font-family:var(--monthly-title-font);font-size:var(--monthly-title-size);line-height:1;margin:0 0 10px}
+  .monthly-grid{display:grid;grid-template-columns:repeat(7,1fr);border-left:1px solid #aaa;border-top:1px solid #aaa}
+  .monthly-dow{background:var(--monthly-day-bg);color:var(--monthly-day-text);text-align:center;font-weight:800;padding:5px;border-right:1px solid #aaa;border-bottom:1px solid #aaa;font-size:var(--monthly-day-font-size)}
+  .monthly-day{min-height:1.25in;padding:4px;border-right:1px solid #aaa;border-bottom:1px solid #aaa;overflow:hidden;font-size:var(--monthly-font-size);line-height:1.08;font-family:var(--monthly-font-family);color:var(--monthly-text-color)}
+  .monthly-day.outside{background:#fff;color:transparent}
+  .monthly-date{font-weight:900;font-size:.95em;margin-bottom:3px;background:var(--monthly-date-bg);color:var(--monthly-date-text);padding:2px 4px}
+  .monthly-item{margin:0 0 4px;text-align:var(--monthly-text-align)}
+  .monthly-item .mt{font-weight:900}
+  .monthly-item.shared{background:var(--monthly-highlight-bg);padding:2px}
+  .daily-print-sheet{box-sizing:border-box;width:11in;min-height:17in;margin:12px auto;background:#fff;padding:.55in;border:1px solid #ddd;--daily-font-size:36pt;--daily-day-font:Arial,sans-serif;--daily-day-size:68pt;--daily-date-font:Arial,sans-serif;--daily-date-size:46pt;--daily-header-bg:#ffffff;--daily-header-text:#1f2a24;--daily-font-family:Arial,sans-serif;--daily-text-align:left;--daily-text-color:#1f2a24;--daily-highlight-bg:#f4f0df}
+  .daily-head{text-align:center;border-bottom:2px solid #8d8f8e;padding:22px 18px 20px;margin-bottom:24px;background:var(--daily-header-bg);color:var(--daily-header-text);border-radius:10px}
+  .daily-head h2{font-family:Georgia,serif;font-size:34px;margin:0 0 8px}
+  .daily-head .daily-day-title{font-family:var(--daily-day-font);font-size:var(--daily-day-size);font-weight:900;line-height:.98;margin:0 0 8px}.daily-head .daily-date-title{font-family:var(--daily-date-font);font-size:var(--daily-date-size);font-weight:800;line-height:1.02}
+  .daily-items{font-size:var(--daily-font-size);line-height:1.22;font-family:var(--daily-font-family);color:var(--daily-text-color)}
+  .daily-item{display:block;padding:18px 4px 20px;border-bottom:1px solid #ddd;text-align:var(--daily-text-align)}
+  .daily-item .dt{font-weight:900;white-space:nowrap;line-height:1.05;margin-bottom:6px}
+  .daily-item .dn{font-weight:800;min-width:0;line-height:1.08;white-space:normal;overflow-wrap:break-word;word-break:normal;width:100%}
+  .daily-item.shared{background:var(--daily-highlight-bg)}
+  .daily-empty{text-align:center;font-size:var(--daily-font-size);padding:50px 10px;color:#666}
+
+
+/* v4.3.2 selectable calendar group cleanup */
+.audience-choice-panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px 12px;margin-top:7px;padding:10px 12px;border:1px solid #d7ddd8;border-radius:12px;background:#fbfcfa}
+.audience-choice{display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:8px!important;margin:0!important;min-height:28px;width:auto!important}
+.audience-choice input[type="checkbox"]{width:16px!important;height:16px!important;min-width:16px!important;margin:0!important;flex:0 0 16px}
+.audience-choice span{display:inline!important;width:auto!important;line-height:1.2}
+.planning-only-box{margin-top:12px;padding:10px 12px;border:1px solid #d7ddd8;border-radius:12px;background:#f4f5f3}
+.planning-only-box .tiny{margin:3px 0 0 24px}
+</style>
+
+<style>
+#flexDatesSafeDialog{
+  width:min(680px,calc(100vw - 40px));
+  max-width:680px;
+  box-sizing:border-box;
+  overflow-x:hidden;
+}
+#flexDatesSafeDialog > div{
+  min-width:0 !important;
+  width:100%;
+  box-sizing:border-box;
+}
+#flexDatesSafeDialog .flexDatesSafeRow{
+  grid-template-columns:150px minmax(0,1fr) auto !important;
+}
+#flexDatesSafeDialog input{min-width:0;box-sizing:border-box}
+@media(max-width:620px){
+  #flexDatesSafeDialog .flexDatesSafeRow{
+    grid-template-columns:1fr !important;
+  }
+}
+</style>
+
+
+<style>
+@media print{
+  body.printing-monthly #preview,body.printing-monthly #dailyPreview,body.printing-monthly #activity,body.printing-monthly #master{display:none!important}
+  body.printing-monthly #monthlyPreview{display:block!important}
+  body.printing-monthly .monthly-print-sheet{border:none;margin:0;width:11in;min-height:8.5in;padding:.18in}
+  body.printing-daily #preview,body.printing-daily #monthlyPreview,body.printing-daily #activity,body.printing-daily #master{display:none!important}
+  body.printing-daily #dailyPreview{display:block!important}
+  body.printing-daily .daily-print-sheet{border:none;margin:0;width:11in;min-height:17in;padding:.45in}
+  body.printing-monthly #preview, body.printing-daily #preview{display:none!important}
+}
+</style>
+
+
+<style>
+/* v3.6.2 print typography */
+#monthlyPrintSheet .monthly-print-title h2{font-family:var(--monthly-title-font)!important;font-size:var(--monthly-title-size)!important;}
+#dailyPrintSheet .daily-day-title{font-family:var(--daily-day-font)!important;font-size:var(--daily-day-size)!important;line-height:.98!important;}#dailyPrintSheet .daily-date-title{font-family:var(--daily-date-font)!important;font-size:var(--daily-date-size)!important;line-height:1.02!important;}
+#dailyPrintSheet .daily-item{display:block!important;}
+#dailyPrintSheet .dt{white-space:nowrap!important;margin-bottom:6px!important;}
+#dailyPrintSheet .dn{width:100%!important;}
+#printSheet .weekrange,
+#printSheet .weekRange,
+#printSheet .range,
+#printSheet .print-range,
+#printSheet .printRange,
+#printSheet .week-range{font-size:24pt!important;}
+</style>
+
+<style>
+@media print {
+  #printSheet .shared, #monthlyPrintSheet .shared, #dailyPrintSheet .shared, #calendar .both {
+    background-color:#f4f0df !important;
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+  }
+  #printSheet *, #monthlyPrintSheet *, #dailyPrintSheet * {
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+  }
+}
+</style>
+
+<style>
+/* v3.7.2 — MC Monthly only: modestly reclaim horizontal space.
+   AL Monthly, Weekly, and Daily layouts remain unchanged. */
+#monthlyPrintSheet.mc-monthly-wide{
+  padding-left:.10in !important;
+  padding-right:.10in !important;
+}
+#monthlyPrintSheet.mc-monthly-wide .monthly-day{
+  padding-left:2px !important;
+  padding-right:2px !important;
+}
+</style>
+
+<style id="mcCollabStyles">.mc-collab{background:#f4f8f3;border:1px solid #b9ccba;border-radius:14px;padding:16px;margin:16px 0}.mc-collab h3{margin:0 0 8px}.mc-collab button{margin:4px}.mc-collab .mc-item{background:white;border:1px solid #d7e2d7;border-radius:10px;padding:12px;margin:10px 0}.mc-collab label{display:inline-flex;gap:6px;align-items:center;width:auto;margin-right:12px}.mc-collab input[type=checkbox]{width:auto}.mc-collab .mc-warn{color:#8b2d22;font-weight:700}.mc-collab .mc-ok{color:#285b36;font-weight:700}body.mc-contributor #setup,body.mc-contributor #setup~dialog{ }body.mc-contributor #programSeg button:not([data-program="MC"]),body.mc-contributor #activityProgramSeg button:not([data-listprogram="MC"]),body.mc-contributor #setup,body.mc-contributor nav button[data-screen="setup"],body.mc-contributor #resetData,body.mc-contributor #setupReset{display:none!important}@media print{.mc-collab{display:none!important}}</style>
+</head>
+<body data-mc-contributor="true">
+<div class="no-print" style="background:#fff6db;color:#533f1e;border-bottom:2px solid #d5ad5c;padding:12px 18px;font:600 14px/1.5 system-ui,sans-serif">
+  WEB READINESS DEMO — Use fictional activities only. This version has NO login or online synchronization. Work is stored in this browser on this device. Do not upload real Spring Gardens schedules or resident information to a public host. Save backups regularly.
+</div>
+<div style="padding:10px 18px;background:#f7f4ed;border-bottom:1px solid #ddd">
+<button id="saveBackupBtn">💾 Save Backup</button>
+<button id="restoreBackupBtn">↥ Restore Backup</button>
+<input id="restoreBackupFile" type="file" accept=".json,application/json" style="display:none">
+<span id="lastBackupStamp" style="font-size:12px;color:#667085;margin-left:8px"></span>
+</div>
+<header>
+  <div class="brand">
+    <div>
+      <small>THE ACTIVITY COTTAGE</small>
+      <h1 id="appMainTitle">Calendar Garden — Spring Gardens</h1>
+    </div>
+    <small>Memory Care • Web Readiness Demo (not for staff deployment)</small>
+  </div>
+  <nav class="no-print">
+    <button data-screen="master" id="masterNavBtn" class="active">Master Calendar</button>
+    <button data-screen="preview">Weekly Print Preview</button>
+    <button data-screen="monthlyPreview">Monthly Print Preview</button>
+    <button data-screen="dailyPreview">Daily Print Preview</button>
+    <button data-screen="activity">Activity Library</button>
+    <button data-screen="setup">⚙ Calendar Setup</button>
+  </nav>
+</header>
+
+<main>
+
+<section id="setup" class="screen">
+  <div class="toolbar">
+    <div class="left"><h2 style="margin:0">Calendar Garden Setup</h2></div>
+    <div class="right"><span id="setupSaved" class="tiny" style="font-weight:800;color:#496b55"></span></div>
+  </div>
+  <div class="card" style="max-width:900px;margin:0 auto">
+    <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:18px">
+      <h3 style="margin:0">Community</h3>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <button class="btn primary" id="setupSave" type="button">💾 Save Calendar Setup</button>
+        <button class="btn soft" id="setupReset" type="button">Restore Spring Gardens Setup</button>
+      </div>
+    </div>
+    <label style="display:block;font-weight:800;margin-bottom:6px">Community / Facility Name</label>
+    <input id="setupCommunityName" type="text" value="Spring Gardens" style="width:100%;max-width:520px">
+    <div class="tiny" style="margin-top:6px">This name identifies this Calendar Garden workspace. Your existing activity data stays untouched.</div>
+
+    <hr style="border:0;border-top:1px solid #e2e5df;margin:24px 0">
+    <h3>Your Calendar Groups</h3>
+    <div class="tiny" style="margin-bottom:12px">For this first foundation test, the first two groups stay connected internally to the protected AL and MC scheduling engine. You can rename what people see without changing the working schedule logic.</div>
+    <div id="setupGroups"></div>
+    <button class="btn soft" id="setupAddGroup" type="button">+ Add Another Group</button>
+
+    <hr style="border:0;border-top:1px solid #e2e5df;margin:24px 0">
+    <h3>Calendar Options</h3>
+    <div style="display:flex;flex-direction:column;gap:10px;align-items:flex-start;margin:10px 0 14px">
+      <label style="display:inline-flex;gap:10px;align-items:center;font-weight:700;width:auto">
+        <input id="setupShared" type="checkbox" checked style="width:auto;margin:0"> Shared activities between groups
+      </label>
+      <label style="display:inline-flex;gap:10px;align-items:center;font-weight:700;width:auto">
+        <input id="setupStaff" type="checkbox" checked style="width:auto;margin:0"> Staff / Planning calendar
+      </label>
+    </div>
+    <div class="tiny">These options are being saved in this test version, but they do not remove or rewrite any existing Spring Gardens activities yet.</div>
+  </div>
+</section>
+<section id="activity" class="screen">
+  <div class="toolbar">
+    <div class="left">
+      <h2 style="margin:0">Spring Gardens Activity Library</h2>
+    </div>
+    <div class="right">
+      <button class="btn soft" id="resetData">Reset Sample Data</button>
+      <button class="btn primary" id="addActivity">+ Add Activity</button>
+    </div>
+  </div>
+
+  <div class="statrow" id="stats"></div>
+
+
+  <div class="seg" id="activityKindSeg" style="margin:14px 0 8px">
+    <button data-listkind="ONGOING" class="active">Recurring & Flexible Activities</button>
+    <button data-listkind="UPCOMING">One-Time Events — Upcoming</button>
+    <button data-listkind="PAST">One-Time Events — Past</button>
+  </div>
+  <div class="tiny" id="activityKindNote" style="margin:0 0 10px">Your ongoing activity library. One-time events are kept separately so they do not clutter permanent programs.</div>
+
+  <div class="seg" id="activityProgramSeg" style="margin:8px 0 14px">
+    <button data-listprogram="AL" class="active">Assisted Living</button>
+    <button data-listprogram="MC">Memory Care</button>
+    <button data-listprogram="BOTH">Shared AL + MC</button>
+    <button data-listprogram="INTERNAL">Staff / Planning</button>
+    <button data-listprogram="ALL">View All</button>
+  </div>
+  <div class="tiny" id="dynamicGroupTestNote" style="margin:-4px 0 12px;color:#667085">
+    Activities can be assigned to any combination of resident calendars. Group tabs show everything invited to that calendar; View All shows the full calendar combination.
+  </div>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr><th>Activity</th><th>Type</th><th>Program</th><th>Schedule</th><th>Location</th><th>Resident</th><th>Monthly Details</th><th></th></tr>
+      </thead>
+      <tbody id="activityRows"></tbody>
+    </table>
+  </div>
+</section>
+
+<section id="master" class="screen active">
+  <div class="toolbar">
+    <div class="left">
+      <div class="seg" id="programSeg">
+        <button data-program="AL" class="active">Assisted Living</button>
+        <button data-program="MC">Memory Care</button>
+        <button data-program="BOTH">Shared AL + MC</button>
+        <button data-program="INTERNAL">Staff / Planning</button>
+        <button data-program="ALL">View All</button>
+      </div>
+    </div>
+    <div class="right">
+      <button class="btn" id="prevMonth">‹</button>
+      <button class="btn" id="todayMonth">October 2026</button>
+      <button class="btn" id="nextMonth">›</button>
+      <button class="btn primary" id="fillMonthBtn">Fill This Month</button>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="month-head">
+        <div>
+          <div class="month-title" id="monthTitle">October 2026</div>
+          <div class="tiny">Click an item to edit. Internal planning blocks never print on resident calendars.</div>
+          <div class="review-tools no-print"><span id="monthReviewStatus" class="review-status">Checking schedule…</span><button class="btn soft" id="recheckMonthBtn" type="button">↻ Recheck This Month</button></div>
+        </div>
+      </div>
+      <div class="calendar" id="calendar"></div>
+      <div class="legend">
+        <span><span class="swatch" style="background:#eef3ef"></span>AL</span>
+        <span><span class="swatch" style="background:#edf2f8"></span>MC</span>
+        <span><span class="swatch" style="background:#f7f1df"></span>Shared</span>
+        <span><span class="swatch" style="background:#eee"></span>Planning Block</span>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Calendar Check</h3>
+        <div id="checks"></div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3 style="margin-top:0">Prototype Notes</h3>
+        <p class="tiny">This first working prototype proves the core flow:</p>
+        <p><b>Saved activity → recurrence → October dates → AL weekly resident print view.</b></p>
+        <p class="tiny">This demo begins with no activities. Add fictional activities to test schedule conflicts.</p>
+        <p class="tiny"><b>New:</b> Monthly Rotation supports different activities on the 1st–5th occurrence of a weekday. Thursday 2:00 and Tuesday Game Show Hour are preloaded as examples.</p>
+        <p class="tiny"><b>Also new:</b> Monthly by Week supports activities such as Resident Council (1st Monday), Temple Outing (1st Wednesday), Chair Travel (3rd Tuesday), and Podiatry (4th Tuesday). A one-month move exception can change a date/time without changing the normal recurrence.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="preview" class="screen">
+  <div class="toolbar no-print">
+    <div class="weekly-toolbar-grid">
+      <div class="weekly-toolbar-title">
+        <h2>Weekly Print Preview</h2>
+        <div class="weekly-week-picker">
+          <label>Week</label>
+          <select id="weekSelect"></select>
+        </div>
+      </div>
+
+      <div class="card weekly-basic-options" id="printOptions">
+        <div><label>Calendar</label><select id="printProgram" onchange="handleWeeklyCalendarChange(this.value)"><option value="AL">Assisted Living</option><option value="MC">Memory Care</option></select></div>
+        <div><label>Orientation</label><select id="printOrientation"><option value="landscape">Landscape</option><option value="portrait">Portrait</option></select></div>
+        <div><label>Activity Font Size</label><select id="printFontSize">
+          <option value="11">11 pt</option><option value="12">12 pt</option><option value="13">13 pt</option>
+          <option value="14">14 pt</option><option value="15">15 pt</option><option value="16" selected>16 pt</option></select></div>
+      </div>
+
+      <div class="weekly-style-card">
+        <h3>Weekly Calendar Style</h3>
+        <div class="weekly-style-grid">
+          <div><label>Title Font</label><select id="weeklyTitleFont"><option value="Arial, sans-serif">Arial</option><option value="Aptos, Calibri, sans-serif">Aptos / Calibri</option><option value="Verdana, sans-serif">Verdana</option><option value="Georgia, serif">Georgia</option><option value="'Trebuchet MS', Trebuchet, Arial, sans-serif">Trebuchet MS</option></select></div>
+          <div><label>Title Size</label><select id="weeklyTitleSize"><option value="18">18 pt</option><option value="20">20 pt</option><option value="22">22 pt</option><option value="24" selected>24 pt</option><option value="26">26 pt</option><option value="28">28 pt</option><option value="30">30 pt</option><option value="32">32 pt</option><option value="34">34 pt</option><option value="36">36 pt</option></select></div>
+          <div><label>Activity Font</label><select id="weeklyFontFamily"><option value="Arial, sans-serif">Arial</option><option value="Aptos, Calibri, sans-serif">Aptos / Calibri</option><option value="Verdana, sans-serif">Verdana</option><option value="Georgia, serif">Georgia</option><option value="'Trebuchet MS', Trebuchet, Arial, sans-serif">Trebuchet MS</option></select></div>
+          <div><label>Activity Alignment</label><select id="weeklyTextAlign"><option value="left">Left</option><option value="center">Center</option></select></div>
+          <div><label>Activity Text</label><input id="weeklyTextColor" type="color" value="#1f2a24"></div>
+          <div><label>Days Row</label><input id="weeklyDayBg" type="color" value="#8d8f8e"></div>
+          <div><label>Days Text</label><input id="weeklyDayText" type="color" value="#ffffff"></div>
+          <div><label>Days of Week Size</label><select id="weeklyDayFontSize"><option value="12">12 px</option><option value="14" selected>14 px</option><option value="16">16 px</option><option value="18">18 px</option><option value="20">20 px</option><option value="22">22 px</option></select></div>
+          <div><label>Date Row</label><input id="weeklyDateBg" type="color" value="#ffffff"></div>
+          <div><label>Date Text</label><input id="weeklyDateText" type="color" value="#1f2a24"></div>
+          <div><label>Shared Activity Highlight</label><input id="weeklyHighlightBg" type="color" value="#f4f0df"></div>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn soft" id="copyWeeklyStyle">Copy Style to Other Calendar</button><button type="button" class="btn soft" id="resetWeeklyStyle">Reset Weekly Style</button></div>
+      </div>
+
+      <div class="weekly-print-action">
+        <button class="btn" id="printBtn">Print / Save PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="week-preview">
+    <div class="no-print notice ok">Resident preview automatically hides internal Planning Blocks.</div>
+    <div class="print-sheet" id="printSheet"></div>
+  </div>
+</section>
+
+<section id="monthlyPreview" class="screen">
+  <div class="toolbar no-print">
+    <div class="weekly-toolbar-grid">
+      <div class="weekly-toolbar-title">
+        <h2>Monthly Print Preview</h2>
+      </div>
+      <div class="card weekly-basic-options">
+        <div><label>Calendar</label><select id="monthlyPrintProgram"><option value="AL">Assisted Living</option><option value="MC">Memory Care</option></select></div>
+        <div><label>Activity Font Size</label><select id="monthlyPrintFontSize"><option value="10">10 pt</option><option value="11">11 pt</option><option value="12" selected>12 pt</option><option value="13">13 pt</option><option value="14">14 pt</option></select></div>
+      </div>
+      <div class="weekly-style-card">
+        <h3>Monthly Calendar Style</h3>
+        <div class="weekly-style-grid">
+          <div><label>Title Font</label><select id="monthlyTitleFont"><option value="Arial, sans-serif">Arial</option><option value="Aptos, Calibri, sans-serif">Aptos / Calibri</option><option value="Verdana, sans-serif">Verdana</option><option value="Georgia, serif">Georgia</option><option value="'Trebuchet MS', Trebuchet, Arial, sans-serif">Trebuchet MS</option></select></div>
+          <div><label>Title Size</label><select id="monthlyTitleSize"><option value="36">36 pt</option><option value="42">42 pt</option><option value="48">48 pt</option><option value="54">54 pt</option><option value="60" selected>60 pt</option><option value="66">66 pt</option><option value="72">72 pt</option></select></div>
+          <div><label>Activity Font</label><select id="monthlyFontFamily"><option value="Arial, sans-serif">Arial</option><option value="Aptos, Calibri, sans-serif">Aptos / Calibri</option><option value="Verdana, sans-serif">Verdana</option><option value="Georgia, serif">Georgia</option><option value="'Trebuchet MS', Trebuchet, Arial, sans-serif">Trebuchet MS</option></select></div>
+          <div><label>Activity Alignment</label><select id="monthlyTextAlign"><option value="left">Left</option><option value="center">Center</option></select></div>
+          <div><label>Activity Text</label><input id="monthlyTextColor" type="color" value="#1f2a24"></div>
+          <div><label>Days Row</label><input id="monthlyDayBg" type="color" value="#8d8f8e"></div>
+          <div><label>Days Text</label><input id="monthlyDayText" type="color" value="#ffffff"></div>
+          <div><label>Days of Week Size</label><select id="monthlyDayFontSize"><option value="12">12 px</option><option value="14" selected>14 px</option><option value="16">16 px</option><option value="18">18 px</option><option value="20">20 px</option><option value="22">22 px</option></select></div>
+          <div><label>Date Number Background</label><input id="monthlyDateBg" type="color" value="#ffffff"></div>
+          <div><label>Date Text</label><input id="monthlyDateText" type="color" value="#1f2a24"></div>
+          <div><label>Shared Activity Highlight</label><input id="monthlyHighlightBg" type="color" value="#f4f0df"></div>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn soft" id="copyMonthlyStyle">Copy Style to Other Calendar</button><button type="button" class="btn soft" id="resetMonthlyStyle">Reset Monthly Style</button></div>
+      </div>
+      <div class="weekly-print-action"><button class="btn" id="monthlyPrintBtn">Print / Save PDF</button></div>
+    </div>
+  </div>
+  <div class="no-print notice ok">Monthly resident preview hides Staff / Planning blocks and includes Shared + Flexible Monthly activities.</div>
+  <div class="monthly-print-sheet" id="monthlyPrintSheet"></div>
+</section>
+
+<section id="dailyPreview" class="screen">
+  <div class="toolbar no-print">
+    <div class="left">
+      <h2 style="margin:0">Daily Print Preview</h2>
+      <div class="row" style="align-items:end;gap:14px;flex-wrap:wrap;margin-top:10px">
+        <div><label>Calendar</label><select id="dailyPrintProgram"><option value="AL">Assisted Living</option><option value="MC">Memory Care</option></select></div>
+        <div><label>Date</label><input id="dailyPrintDate" type="date" value="2026-10-01"></div>
+        <div><label>Activity Font Size</label><select id="dailyPrintFontSize"><option value="18">18 pt</option><option value="20">20 pt</option><option value="22">22 pt</option><option value="24">24 pt</option><option value="26">26 pt</option><option value="30">30 pt</option><option value="36" selected>36 pt</option><option value="42">42 pt</option><option value="48">48 pt</option><option value="54">54 pt</option><option value="60">60 pt</option></select></div>
+      </div>
+    </div>
+    <div class="weekly-style-panel">
+      <div class="weekly-style-title">Daily Calendar Style</div>
+      <div class="weekly-style-grid">
+        <div><label>Day Font</label><select id="dailyDayFont"><option value="Arial, sans-serif">Arial</option><option value="Aptos, Calibri, sans-serif">Aptos / Calibri</option><option value="Verdana, sans-serif">Verdana</option><option value="Georgia, serif">Georgia</option><option value="'Trebuchet MS', sans-serif">Trebuchet MS</option></select></div>
+        <div><label>Day Size</label><select id="dailyDaySize"><option value="52">52 pt</option><option value="56">56 pt</option><option value="60">60 pt</option><option value="64">64 pt</option><option value="68" selected>68 pt</option><option value="72">72 pt</option><option value="76">76 pt</option><option value="80">80 pt</option></select></div>
+        <div><label>Date Font</label><select id="dailyDateFont"><option value="Arial, sans-serif">Arial</option><option value="Aptos, Calibri, sans-serif">Aptos / Calibri</option><option value="Verdana, sans-serif">Verdana</option><option value="Georgia, serif">Georgia</option><option value="'Trebuchet MS', sans-serif">Trebuchet MS</option></select></div>
+        <div><label>Date Size</label><select id="dailyDateSize"><option value="30">30 pt</option><option value="34">34 pt</option><option value="38">38 pt</option><option value="42">42 pt</option><option value="46" selected>46 pt</option><option value="50">50 pt</option><option value="54">54 pt</option><option value="58">58 pt</option></select></div>
+        <div><label>Header Background</label><input id="dailyHeaderBg" type="color" value="#ffffff"></div>
+        <div><label>Header Text</label><input id="dailyHeaderText" type="color" value="#1f2a24"></div>
+        <div><label>Activity Font</label><select id="dailyFontFamily"><option value="Arial, sans-serif">Arial</option><option value="Aptos, Calibri, sans-serif">Aptos / Calibri</option><option value="Verdana, sans-serif">Verdana</option><option value="Georgia, serif">Georgia</option><option value="'Trebuchet MS', sans-serif">Trebuchet MS</option></select></div>
+        <div><label>Activity Alignment</label><select id="dailyTextAlign"><option value="left">Left</option><option value="center">Center</option></select></div>
+        <div><label>Activity Text</label><input id="dailyTextColor" type="color" value="#1f2a24"></div>
+        <div><label>Shared Activity Highlight</label><input id="dailyHighlightBg" type="color" value="#f4f0df"></div>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn soft" id="copyDailyStyle">Copy Style to Other Calendar</button><button type="button" class="btn soft" id="resetDailyStyle">Reset Daily Style</button></div>
+    </div>
+    <div class="weekly-print-action"><button class="btn" id="dailyPrintBtn">Print / Save PDF</button></div>
+  </div>
+  <div class="no-print notice ok">Daily resident preview is formatted for an 11×17 posted page and includes Shared + Flexible Monthly activities.</div>
+  <div class="daily-print-sheet" id="dailyPrintSheet"></div>
+</section>
+
+</main>
+
+<dialog id="activityDialog">
+  <div class="modal-head">
+    <strong id="dialogTitle">Add Activity</strong>
+    <button class="x" onclick="activityDialog.close()">×</button>
+  </div>
+  <div class="modal-body editor">
+    <input type="hidden" id="editId"/>
+    <div class="formrow">
+      <div>
+        <label>Activity Name</label>
+        <input id="fName" placeholder="BINGO"/>
+      </div>
+      <div>
+        <label>Type</label>
+        <select id="fType">
+          <option value="recurring">Recurring Activity</option>
+          <option value="slot">Recurring Program Slot</option>
+          <option value="rotation">Monthly Rotation (1st–5th)</option>
+          <option value="monthly-nth">Monthly by Week</option>
+          <option value="one-time">One-Time / Special</option>
+          <option value="planning">Planning Block</option>
+        <option value="flexible">Flexible Monthly Program</option></select>
+      </div>
+    </div>
+
+    <div class="formrow">
+      <div>
+        <label>Show on Calendars</label>
+        <div id="fAudienceGroups" class="audience-choice-panel"></div>
+        <div class="tiny" style="margin-top:6px">Choose every resident calendar that should include this activity.</div>
+        <div class="planning-only-box">
+          <label class="audience-choice"><input type="checkbox" id="fInternalOnly"><span>Staff / Planning Only</span></label>
+          <div class="tiny">Use for internal meetings, staffing blocks, and planning items that residents should not see.</div>
+        </div>
+        <select id="fProgram" style="display:none"><option value="AL">Assisted Living</option></select>
+      </div>
+      <div>
+        <label>Location</label>
+        <input id="fLocation" placeholder="e.g., Activity Room, Dining Room, Patio"/>
+      </div>
+    </div>
+
+    <div class="formrow">
+      <div>
+        <label>Time</label>
+        <input id="fTime" type="time"/>
+      </div>
+      <div>
+        <label>One-Time Date (optional)</label>
+        <input id="fDate" type="date"/>
+      </div>
+    </div>
+
+    <div id="regularDayFields">
+    <label>Recurring Days</label>
+    <div class="checks" id="dayChecks">
+      <label><input type="checkbox" value="0"> Sun</label>
+      <label><input type="checkbox" value="1"> Mon</label>
+      <label><input type="checkbox" value="2"> Tue</label>
+      <label><input type="checkbox" value="3"> Wed</label>
+      <label><input type="checkbox" value="4"> Thu</label>
+      <label><input type="checkbox" value="5"> Fri</label>
+      <label><input type="checkbox" value="6"> Sat</label>
+    </div>
+    </div>
+
+    <div id="monthlyNthFields" style="display:none;margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--soft)">
+      <b>Monthly by Week</b>
+      <div class="tiny">Use this for activities that normally happen once a month, such as the 1st Monday or 3rd Tuesday.</div>
+      <div class="formrow">
+        <div>
+          <label>Occurrence</label>
+          <div id="fNthChecks" style="display:flex;gap:10px;flex-wrap:wrap">
+<label><input type="checkbox" value="1"> 1st</label><label><input type="checkbox" value="2"> 2nd</label>
+<label><input type="checkbox" value="3"> 3rd</label><label><input type="checkbox" value="4"> 4th</label>
+<label><input type="checkbox" value="5"> 5th</label><label><input type="checkbox" value="-1"> Last</label></div>
+        </div>
+        <div>
+          <label>Weekday</label>
+          <select id="fNthDay">
+            <option value="0">Sunday</option>
+            <option value="1">Monday</option>
+            <option value="2">Tuesday</option>
+            <option value="3">Wednesday</option>
+            <option value="4">Thursday</option>
+            <option value="5">Friday</option>
+            <option value="6">Saturday</option>
+          </select>
+        </div>
+      </div>
+      <div class="tiny">The generated date is the normal schedule. Individual months can later be moved as a one-month exception without changing future months.</div>
+    </div>
+
+    <div id="rotationFields" style="display:none;margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--soft)">
+      <b>Monthly Rotation</b>
+      <div class="tiny">Choose what should appear on the 1st through 5th occurrence of the selected weekday each month.</div>
+      <div class="formrow"><div><label>1st</label><input id="rot1" placeholder="Hot Wheels"></div><div><label>2nd</label><input id="rot2" placeholder="Horse Races"></div></div>
+      <div class="formrow"><div><label>3rd</label><input id="rot3" placeholder="Hot Wheels"></div><div><label>4th</label><input id="rot4" placeholder="Bocce Ball"></div></div>
+      <div><label>5th</label><input id="rot5" placeholder="Horse Races or leave blank"></div>
+    </div>
+
+    <div class="checks" style="margin-top:14px">
+      <label><input id="fResident" type="checkbox" checked> Show on resident calendars</label>
+      <label><input id="fHighlight" type="checkbox"> Highlight on MC calendar</label>
+    </div>
+
+    <label>Print / Slot Detail (optional)</label>
+    <input id="fDetail" placeholder='e.g. “Trivia Time” or performer/movie title'/>
+
+    <div id="exceptionFields" style="display:none;margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:10px;background:#fffaf0">
+      <b>One-Month Exception</b>
+      <div class="tiny">Optional: move this month's occurrence without changing the normal recurring rule.</div>
+      <div class="formrow">
+        <div><label>Month</label><input id="fExceptionMonth" type="month"></div>
+        <div><label>Move to date</label><input id="fExceptionDate" type="date"></div>
+      </div>
+      <div class="formrow">
+        <div><label>New time (optional)</label><input id="fExceptionTime" type="time"></div>
+        <div><label>Reason / note</label><input id="fExceptionNote" placeholder="e.g. moved for Luau Week"></div>
+      </div>
+    </div>
+
+    <div style="margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--soft)">
+      <label style="margin-top:0"><input id="fChangingDetail" type="checkbox" style="width:auto"> This program has different details each time</label>
+      <label>What changes each time?</label>
+      <input id="fDetailLabel" placeholder="Performer, Movie Title, Recipe / Treat, Destination, Project...">
+      <div class="tiny" style="margin-top:6px">You can enter this month's list right here during setup. Later, use <b>Fill This Month</b> on the Master Calendar for quick monthly updates.</div>
+      <div id="editorMonthDetails" style="display:none;margin-top:12px;padding-top:10px;border-top:1px solid var(--line)">
+        <b id="editorMonthDetailsTitle">This Month's Details</b>
+        <div id="editorMonthDetailsBody" style="margin-top:8px"></div>
+      </div>
+    </div>
+    <label>Notes (staff only)</label>
+    <textarea id="fNotes" rows="3"></textarea>
+  </div>
+  <div class="modal-actions">
+    <button class="btn danger" id="deleteActivity" style="margin-right:auto;display:none">Delete</button>
+    <button class="btn" onclick="activityDialog.close()">Cancel</button>
+    <button class="btn primary" id="saveActivity">Save</button>
+  </div>
+</dialog>
+
+<dialog id="occurrenceDialog"><div class="modal-head"><strong>Calendar Occurrence</strong><button class="x" onclick="occurrenceDialog.close()">×</button></div><div class="modal-body"><div id="occurrenceSummary"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px"><button class="btn" id="occEdit">Edit This Occurrence</button><button class="btn" id="occMove">Move This Occurrence</button><button class="btn" id="occReplace">Replace This Occurrence</button><button class="btn danger" id="occCancel">Cancel This Occurrence</button><button class="btn" id="occRestore" style="display:none;border-color:#c43d35;color:#8d2f28;background:#fff0f0">Restore This Activity</button></div><button class="btn soft" id="occSeries" style="margin-top:10px">Edit Recurring Schedule</button></div></dialog>
+<dialog id="scheduleCheckDialog"><div class="modal-head"><strong>Schedule Check</strong><button class="x" onclick="scheduleCheckDialog.close()">×</button></div><div class="modal-body"><div id="scheduleCheckSummary"></div><div id="scheduleCheckActions" style="display:grid;gap:8px;margin-top:14px"></div><button class="btn" style="margin-top:10px" onclick="scheduleCheckDialog.close()">Review Calendar</button></div></dialog>
+<dialog id="occActionDialog"><div class="modal-head"><strong id="occActionTitle">Occurrence Change</strong><button class="x" onclick="occActionDialog.close()">×</button></div><div class="modal-body editor"><div id="oaMoveFields"><div class="formrow"><div><label>Date</label><input id="oaDate" type="date"></div><div><label>Time</label><input id="oaTime" type="time"></div></div></div><div id="oaReplaceFields"><label>Replacement</label><input id="oaReplacement"></div><label>Note</label><input id="oaNote"></div><div class="modal-actions"><button class="btn" onclick="occActionDialog.close()">Cancel</button><button class="btn primary" id="saveOccAction">Save Change</button></div></dialog>
+<dialog id="fillMonthDialog"><div class="modal-head"><strong id="fillMonthTitle">Fill This Month</strong><button class="x" onclick="fillMonthDialog.close()">×</button></div><div class="modal-body" style="max-height:70vh;overflow:auto"><div class="tiny">Fill only the changing detail; the recurring schedule stays intact.</div><div id="fillMonthBody"></div></div><div class="modal-actions"><button class="btn" onclick="fillMonthDialog.close()">Cancel</button><button class="btn primary" id="saveFillMonth">Save Monthly Details</button></div></dialog>
+<div id="cancelUndoToast" class="cancel-undo-toast no-print" role="status" aria-live="polite"><span id="cancelUndoText"></span><button id="cancelUndoBtn" type="button">Undo</button><button id="cancelUndoClose" type="button" aria-label="Dismiss">×</button></div>
+<script>
+const STORAGE_KEY = 'calendarGardenMCWebDemoIsolatedV2';
+
+const SAMPLE = [
+  {id:'standup',name:'Stand-Up Meeting',type:'planning',program:'INTERNAL',days:[1,2,3,4,5],time:'09:30',location:'Staff',resident:false,highlight:false,detail:'',notes:'Hidden planning block'},
+  {id:'church',name:'LDS Church Service',type:'recurring',program:'BOTH',days:[0],time:'14:00',location:'Great Room',resident:true,highlight:true,detail:'',notes:''},
+  {id:'taichi',name:'Tai Chi',type:'recurring',program:'AL',days:[1],time:'11:00',location:'Great Room',resident:true,highlight:false,detail:'',notes:'Seated'},
+  {id:'reader',name:"Reader's Theater",type:'recurring',program:'AL',days:[1],time:'13:00',location:'Great Room',resident:true,highlight:false,detail:'',notes:''},
+  {id:'bingo',name:'BINGO',type:'recurring',program:'AL',days:[1,3],time:'14:00',location:'Great Room',resident:true,highlight:false,detail:'',notes:''},
+  {id:'wii',name:'Wii Bowling',type:'recurring',program:'AL',days:[1,3],time:'15:00',location:'Great Room',resident:true,highlight:false,detail:'',notes:''},
+  {id:'relief',name:'LDS Relief Society',type:'recurring',program:'BOTH',days:[2],time:'10:30',location:'Great Room',resident:true,highlight:true,detail:'',notes:''},
+  {id:'gameshow',name:'Game Show Hour',type:'rotation',program:'BOTH',days:[2],time:'14:00',location:'Great Room',resident:true,highlight:true,detail:'',notes:'Monthly rotation',rotation:['Trivia Time','Music Lounge','Come Fly With Me','Name That Tune','Trivia Time']},
+  {id:'follow',name:'Come Follow Me Class',type:'recurring',program:'AL',days:[2],time:'15:00',location:'Great Room',resident:true,highlight:false,detail:'',notes:''},
+  {id:'entertain',name:'Entertainment',type:'slot',changingDetail:true,detailLabel:'Performer',program:'AL',days:[2],time:'18:00',location:'Great Room',resident:true,highlight:false,detail:'',notes:'Performer changes weekly'},
+  {id:'balcony',name:'Card Games on the Balcony',type:'recurring',program:'AL',days:[1,3,4,5],time:'13:00',location:'Balcony',resident:true,highlight:false,detail:'',notes:'Resident led'},
+  {id:'walmart',name:'Walmart Shopping',type:'recurring',program:'AL',days:[4],time:'10:30',location:'Front Lobby',resident:true,highlight:false,detail:'',notes:'Current weekly time used for prototype'},
+  {id:'bite',name:'Weekly Bite',type:'slot',changingDetail:true,detailLabel:'Recipe / Treat',program:'BOTH',days:[4],time:'10:30',location:'Parlor',resident:true,highlight:true,detail:'',notes:'Weekly food activity'},
+  {id:'thgame',name:'Thursday Group Game',type:'rotation',program:'BOTH',days:[4],time:'14:00',location:'Great Room',resident:true,highlight:true,detail:'',notes:'Monthly rotation',rotation:['Hot Wheels','Horse Races','Hot Wheels','Bocce Ball','Horse Races']},
+  {id:'puzzle',name:'Puzzle Corner',type:'recurring',program:'AL',days:[5],time:'14:00',location:'Puzzle Tables',resident:true,highlight:false,detail:'',notes:''},
+  {id:'bible',name:'Bible Group',type:'recurring',program:'AL',days:[5],time:'15:00',location:'Great Room',resident:true,highlight:false,detail:'',notes:''},
+  {id:'movie',name:'Movie',type:'slot',changingDetail:true,detailLabel:'Movie Title',program:'AL',days:[0,1,3,4,5,6],time:'17:00',location:'Great Room',resident:true,highlight:false,detail:'',notes:'Movie title changes'},
+  {id:'oct2lunch',name:"Lunch Outing to Chubby's",type:'one-time',program:'AL',date:'2026-10-02',days:[],time:'11:00',location:'Front Lobby',resident:true,highlight:false,detail:'Meet in lobby by 10:45',notes:''},
+  {id:'oct3evergreen',name:'Evergreen Project',type:'one-time',program:'AL',date:'2026-10-03',days:[],time:'09:00',location:'Parlor',resident:true,highlight:false,detail:'Spooky Donuts • 9–11 AM',notes:''},
+  {id:'residentcouncil',name:'Resident Council',type:'monthly-nth',program:'AL',days:[],nth:'1',nthDay:1,time:'13:00',location:'Great Room',resident:true,highlight:false,detail:'',notes:'Normally 1st Monday each month'},
+  {id:'templeouting',name:'Temple Outing',type:'monthly-nth',program:'AL',days:[],nth:'1',nthDay:3,time:'12:45',location:'Front Lobby',resident:true,highlight:false,detail:'',notes:'Normally 1st Wednesday each month'},
+  {id:'chairtravel',name:'Chair Travel',type:'monthly-nth',program:'AL',days:[],nth:'3',nthDay:2,time:'14:00',location:'Great Room',resident:true,highlight:false,detail:'',notes:'Normally 3rd Tuesday; may move for themed weeks'},
+  {id:'podiatry',name:'Podiatry',type:'monthly-nth',program:'AL',days:[],nth:'4',nthDay:2,time:'13:00',location:'',resident:true,highlight:false,detail:'',notes:'Normally 4th Tuesday; date may change'},
+
+  {id:'joyride',name:'Joy Ride',type:'slot',changingDetail:true,detailLabel:'Destination',program:'AL',days:[],time:'',location:'Front Lobby',resident:true,highlight:false,detail:'',notes:'Add regular day/time when known'},
+  {id:'craftclass',name:'Craft Class',type:'slot',changingDetail:true,detailLabel:'Project',program:'AL',days:[],time:'',location:'',resident:true,highlight:false,detail:'',notes:'Add regular day/time when known'},
+
+  {id:'mcgentle',name:'Gentle Exercise',type:'recurring',program:'MC',days:[1,2,3,4,5,6],time:'08:00',location:'Memory Care',resident:true,highlight:false,detail:'',notes:''},
+  {id:'mcmonday10',name:'Scenic Nature Video & Visiting Time',type:'recurring',program:'MC',days:[1],time:'10:00',location:'Memory Care',resident:true,highlight:false,detail:'',notes:''},
+  {id:'mcmusicmon',name:'Music Therapy Sing-Alongs',type:'recurring',program:'MC',days:[1],time:'14:00',location:'Memory Care',resident:true,highlight:false,detail:'',notes:''},
+  {id:'mctuesmusic',name:'Music Therapy Sing-Alongs',type:'recurring',program:'MC',days:[2],time:'13:00',location:'Memory Care',resident:true,highlight:false,detail:'',notes:''},
+  {id:'mcsim',name:'Simulation Activity',type:'slot',program:'MC',days:[3],time:'10:00',location:'Memory Care',resident:true,highlight:false,detail:'',notes:'Skiing / flying / train ride / country drive'},
+  {id:'mcthumusic',name:'Music Therapy Sing-Alongs',type:'recurring',program:'MC',days:[4],time:'13:00',location:'Memory Care',resident:true,highlight:false,detail:'',notes:''},
+  {id:'mcanimals',name:'Animals on YouTube & Visiting Time',type:'recurring',program:'MC',days:[5],time:'10:00',location:'Memory Care',resident:true,highlight:false,detail:'',notes:''},
+  {id:'mcsatwalk',name:'Walk / Calendar / Newspaper',type:'recurring',program:'MC',days:[6],time:'10:30',location:'Memory Care',resident:true,highlight:false,detail:'',notes:''},
+  {id:'mcshow',name:'Showtime',type:'recurring',program:'MC',days:[0,1,2,3,4,5,6],time:'17:00',location:'Memory Care',resident:true,highlight:false,detail:'',notes:''},
+];
+
+function clone(v){return JSON.parse(JSON.stringify(v))}
+function loadData(){
+  const raw=localStorage.getItem(STORAGE_KEY);
+  if(raw){ try{return JSON.parse(raw)}catch(e){} }
+  localStorage.setItem(STORAGE_KEY,JSON.stringify([]));
+  return [];
+}
+let activities = loadData().filter(a=>a.program==='MC' || (a.program==='BOTH' && a.resident)).map(a=>({...a,program:'MC',audiences:['MC']}));
+localStorage.setItem(STORAGE_KEY,JSON.stringify(activities));
+
+/* v3.7.1 schedule adjustment:
+   Move the existing Memory Care "Morning Connection" into the open afternoon slot.
+   This is deliberately narrow: only an MC-only record with that exact old name is changed. */
+let v371ScheduleChanged=false;
+activities.forEach(a=>{
+  if(a.program==='MC' && String(a.name||'').trim().toLowerCase()==='morning connection'){
+    a.name='Afternoon Connection';
+    a.time='15:00';
+    v371ScheduleChanged=true;
+  }
+});
+if(v371ScheduleChanged){
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(activities));
+}
+
+let currentProgram='AL';
+let currentListProgram='AL';
+let currentListKind='ONGOING';
+let viewYear=2026, viewMonth=9; // October
+let currentScreen='master';
+
+const $=s=>document.querySelector(s);
+const $$=s=>[...document.querySelectorAll(s)];
+
+function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(activities)); renderAll()}
+function fmtTime(t){
+  if(!t)return '';
+  const [h,m]=t.split(':').map(Number);
+  const ap=h>=12?'PM':'AM', hh=((h+11)%12)+1;
+  return `${hh}:${String(m).padStart(2,'0')} ${ap}`;
+}
+function daysText(a){
+  if(a.type==='one-time') return a.date || '';
+  const names=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  if(a.type==='monthly-nth'){
+    const ord={1:'1st',2:'2nd',3:'3rd',4:'4th',5:'5th','-1':'Last',last:'Last'};
+    const weeks=(a.nthWeeks&&a.nthWeeks.length?a.nthWeeks:[a.nth||'1']).map(String);
+    return `${weeks.map(w=>ord[w]||w).join(' & ')} ${names[Number(a.nthDay)]} each month`;
+  }
+  if((a.days||[]).length===5 && [1,2,3,4,5].every(d=>a.days.includes(d))) return 'Weekdays';
+  return (a.days||[]).map(d=>names[d]).join(', ');
+}
+function typeText(t){return ({recurring:'Recurring',slot:'Program Slot',rotation:'Monthly Rotation','monthly-nth':'Monthly by Week','one-time':'One-Time',planning:'Planning Block'})[t]||t}
+function activityAudienceIds(a){
+  if(!a)return [];
+  if(Array.isArray(a.audiences)&&a.audiences.length) return [...new Set(a.audiences)];
+  if(a.program==='BOTH') return ['AL','MC'];
+  if(a.program==='INTERNAL') return [];
+  return a.program?[a.program]:[];
+}
+function activityShowsOn(a,groupId){
+  const source=(a&&a.id&&Array.isArray(activities)) ? (activities.find(x=>x.id===a.id)||a) : a;
+  return activityAudienceIds(source).includes(groupId);
+}
+function audienceText(a){
+  if(a?.program==='INTERNAL') return 'Staff / Planning';
+  const ids=activityAudienceIds(a);
+  return ids.map(programText).join(' + ')||'No resident calendar';
+}
+function renderEditorAudienceChoices(a=null){
+  const host=document.getElementById('fAudienceGroups'); if(!host)return;
+  const ids=a?activityAudienceIds(a):(currentListProgram&&!['ALL','BOTH','INTERNAL'].includes(currentListProgram)?[currentListProgram]:['AL']);
+  host.innerHTML=activityLibraryGroups().map(g=>`<label class="audience-choice"><input type="checkbox" class="fAudienceCheck" value="${g.id}" ${ids.includes(g.id)?'checked':''}><span>${g.name}</span></label>`).join('');
+  const internal=document.getElementById('fInternalOnly'); if(internal) internal.checked=a?.program==='INTERNAL';
+}
+function syncLegacyProgramFromAudience(){
+  const internal=document.getElementById('fInternalOnly')?.checked;
+  const ids=$$('.fAudienceCheck:checked').map(x=>x.value);
+  let p='AL';
+  if(internal) p='INTERNAL';
+  else if(ids.length===2&&ids.includes('AL')&&ids.includes('MC')) p='BOTH';
+  else if(ids.length) p=ids[0];
+  const hidden=document.getElementById('fProgram'); if(hidden) hidden.value=p;
+  return {program:p,audiences:internal?[]:ids};
+}
+function programText(p){
+  if(p==='AL') return setupGroupName('AL','Assisted Living');
+  if(p==='MC') return setupGroupName('MC','Memory Care');
+  if(p==='BOTH') return `Shared ${setupGroupName('AL','Assisted Living')} + ${setupGroupName('MC','Memory Care')}`;
+  if(p==='INTERNAL') return 'Staff / Planning';
+  const g=(calendarSetup?.groups||[]).find(x=>x.id===p);
+  return g?.name||p;
+}
+function programClass(p){return p==='AL'?'al':p==='MC'?'mc':p==='BOTH'?'both':p==='INTERNAL'?'internal':''}
+
+function renderActivityLibrary(){
+  const body=$('#activityRows'); body.innerHTML='';
+  const todayIso=new Date().toISOString().slice(0,10);
+  const filtered=activities
+    .filter(a=>{
+      if(currentListKind==='ONGOING' && a.type==='one-time') return false;
+      if(currentListKind==='UPCOMING' && !(a.type==='one-time' && a.date && a.date>=todayIso)) return false;
+      if(currentListKind==='PAST' && !(a.type==='one-time' && a.date && a.date<todayIso)) return false;
+      if(currentListProgram==='ALL') return true;
+      if(currentListProgram==='AL') return activityShowsOn(a,'AL');
+      if(currentListProgram==='MC') return activityShowsOn(a,'MC');
+      if(currentListProgram==='BOTH') return activityShowsOn(a,'AL')&&activityShowsOn(a,'MC');
+      if(currentListProgram==='INTERNAL') return a.program==='INTERNAL';
+      return activityShowsOn(a,currentListProgram);
+    })
+    .slice().sort((a,b)=>a.name.localeCompare(b.name));
+
+  filtered.forEach(a=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td><b>${a.name}</b>${a.detail?`<div class="tiny">${a.detail}</div>`:''}</td>
+      <td><span class="pill">${typeText(a.type)}</span></td>
+      <td><span class="pill ${programClass(a.program)}">${audienceText(a)}</span></td>
+      <td>${daysText(a)}${a.time?` • ${fmtTime(a.time)}`:''}${a.type==='rotation'?`<div class="tiny">1st ${a.rotation?.[0]||'—'} • 2nd ${a.rotation?.[1]||'—'} • 3rd ${a.rotation?.[2]||'—'} • 4th ${a.rotation?.[3]||'—'} • 5th ${a.rotation?.[4]||'—'}</div>`:''}</td>
+      <td>${a.location||''}</td>
+      <td>${a.resident?'Yes':'Hidden'}</td>
+      <td>${a.type==='flexible'
+        ? `<button class="btn soft flexDatesBtn" data-id="${a.id}">Set Dates / Project</button>`
+        : (a.changingDetail
+          ? `<button class="btn soft fillOneBtn" data-id="${a.id}">Fill ${a.detailLabel||'Details'}</button>`
+          : '<span class="tiny">—</span>')}</td>
+      <td><button class="btn editBtn" data-id="${a.id}">Edit</button></td>`;
+    body.appendChild(tr);
+  });
+
+  if(!filtered.length){
+    body.innerHTML=`<tr><td colspan="8"><div class="notice">${currentListKind==='UPCOMING'?'No upcoming one-time events in this group.':currentListKind==='PAST'?'No past one-time events in this group yet.':'No activities in this section yet.'} Use <b>Add Activity</b> to create one.</div></td></tr>`;
+  }
+
+  const counts={
+    total:filtered.length,
+    recurring:filtered.filter(a=>a.type==='recurring').length,
+    slots:filtered.filter(a=>a.type==='slot'||a.type==='rotation').length,
+    hidden:filtered.filter(a=>!a.resident).length
+  };
+  const upcomingAll=activities.filter(a=>a.type==='one-time'&&a.date&&a.date>=todayIso).length;
+  const pastAll=activities.filter(a=>a.type==='one-time'&&a.date&&a.date<todayIso).length;
+  $('#stats').innerHTML=currentListKind==='ONGOING' ? `
+    <div class="stat"><span>Records in this view</span><b>${counts.total}</b></div>
+    <div class="stat"><span>Recurring activities</span><b>${counts.recurring}</b></div>
+    <div class="stat"><span>Program slots</span><b>${counts.slots}</b></div>
+    <div class="stat"><span>Upcoming one-time events</span><b>${upcomingAll}</b></div>` : `
+    <div class="stat"><span>${currentListKind==='UPCOMING'?'Upcoming':'Past'} in this view</span><b>${counts.total}</b></div>
+    <div class="stat"><span>All upcoming one-time events</span><b>${upcomingAll}</b></div>
+    <div class="stat"><span>Past events kept for reuse</span><b>${pastAll}</b></div>`;
+
+  $$('.editBtn').forEach(b=>b.onclick=()=>openEditor(b.dataset.id));
+  $$('.fillOneBtn').forEach(b=>b.onclick=()=>openSingleFill(b.dataset.id));
+  $$('.flexDatesBtn').forEach(b=>b.onclick=()=>openFlexibleDatesSafe(b.dataset.id));
+}
+
+function monthlyWeekDates(y,m,a){
+  const weeks=(a.nthWeeks&&a.nthWeeks.length?a.nthWeeks:[a.nth||1]).map(Number);
+  return weeks.map(n=>nthWeekdayOfMonth(y,m,n,Number(a.weekday))).filter(Boolean);
+}
+function instancesForRange(start,end){
+  // Keep the requested window, but generate a small buffer around it so an
+  // occurrence moved across a month boundary can still be found from its
+  // original recurring date. The results are filtered back to the requested
+  // window before returning.
+  const requestedStart=new Date(start);
+  const requestedEnd=new Date(end);
+  const generationStart=new Date(start); generationStart.setDate(generationStart.getDate()-45);
+  const generationEnd=new Date(end); generationEnd.setDate(generationEnd.getDate()+45);
+  start=generationStart; end=generationEnd;
+  const out=[];
+  for(const a of activities){
+    if(a.type==='one-time'){
+      if(!a.date) continue;
+      const d=new Date(a.date+'T12:00:00');
+      if(d>=start && d<=end) out.push({...a,instanceDate:a.date});
+      continue;
+    }
+    if(a.type==='flexible'){
+      // Flexible programs do not repeat automatically.
+      // Their actual dates will be handled separately after the stable
+      // recurrence/save paths are protected.
+      continue;
+    }
+    if(a.type==='monthly-nth'){
+      let cursor=new Date(start.getFullYear(), start.getMonth(), 1);
+      const finalMonth=new Date(end.getFullYear(), end.getMonth(), 1);
+      const weeks=(a.nthWeeks&&a.nthWeeks.length?a.nthWeeks:[a.nth||'1']).map(String);
+      while(cursor<=finalMonth){
+        const y=cursor.getFullYear(), m=cursor.getMonth(), targetDay=Number(a.nthDay);
+        for(const week of weeks){
+          let chosen=null;
+          if(week==='last' || week==='-1'){
+            const lastDay=new Date(y,m+1,0);
+            const delta=(lastDay.getDay()-targetDay+7)%7;
+            chosen=new Date(y,m,lastDay.getDate()-delta);
+          } else {
+            const firstDay=new Date(y,m,1);
+            const delta=(targetDay-firstDay.getDay()+7)%7;
+            chosen=new Date(y,m,1+delta+(Number(week)-1)*7);
+            if(chosen.getMonth()!==m) chosen=null;
+          }
+          if(chosen && chosen>=start && chosen<=end){
+            const iso=`${chosen.getFullYear()}-${String(chosen.getMonth()+1).padStart(2,'0')}-${String(chosen.getDate()).padStart(2,'0')}`;
+            out.push({...a,instanceDate:iso});
+          }
+        }
+        cursor=new Date(y,m+1,1);
+      }
+      continue;
+    }
+    if(!a.days || !a.days.length) continue;
+    const d=new Date(start);
+    while(d<=end){
+      if(a.days.includes(d.getDay())){
+        const iso=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        let instance={...a,instanceDate:iso};
+        if(a.type==='rotation'){
+          const occurrence=Math.floor((d.getDate()-1)/7)+1;
+          const chosen=(a.rotation||[])[occurrence-1]||'';
+          if(!chosen){ d.setDate(d.getDate()+1); continue; }
+          instance.rotationOccurrence=occurrence;
+          instance.detail=chosen;
+        }
+        out.push(instance);
+      }
+      d.setDate(d.getDate()+1);
+    }
+  }
+  // Apply one-month move exceptions. The normal recurrence remains unchanged.
+  const adjusted=[];
+  for(const inst of out){
+    let ex=null;
+    if(inst.type==='monthly-nth'){
+      ex=(inst.exceptions||[]).find(e=>e.month===inst.instanceDate.slice(0,7));
+    } else {
+      // For weekly/slot/rotation activities, a same-date one-month exception
+      // changes only that occurrence (for example Church on Oct 4 at 10:00 AM).
+      ex=(inst.exceptions||[]).find(e=>e.month===inst.instanceDate.slice(0,7) && e.date===inst.instanceDate);
+    }
+    if(ex){
+      adjusted.push({...inst,instanceDate:ex.date||inst.instanceDate,time:ex.time||inst.time,exceptionNote:ex.note||'',movedFrom:inst.instanceDate});
+    } else adjusted.push(inst);
+  }
+  const finalItems=[];
+  for(const base of adjusted){
+    let x={...base};
+    const original=x.instanceDate;
+    const ex=(x.occurrenceExceptions||[]).find(e=>e.originalDate===original);
+    if(ex?.action==='cancel'){ x.cancelled=true; x.exceptionNote=ex.note||''; }
+    if(ex?.action==='move'){ x.movedFrom=original; x.instanceDate=ex.date||original; x.time=ex.time||x.time; x.exceptionNote=ex.note||''; }
+    if(ex?.action==='edit'){ x.movedFrom=original; x.instanceDate=ex.date||original; x.time=ex.time||x.time; x.detail=ex.detail||x.detail; x.exceptionNote=ex.note||''; }
+    if(ex?.action==='replace'){ x.replacementName=ex.replacement||x.name; x.exceptionNote=ex.note||''; }
+    const month=x.instanceDate.slice(0,7);
+    const md=(x.monthlyDetails||{})[month]?.[original];
+    if(md) x.detail=md;
+    finalItems.push(x);
+  }
+  // Deduplicate moved monthly records in case a broad range generated an extra copy.
+  const seen=new Set();
+  const requestedStartISO=`${requestedStart.getFullYear()}-${String(requestedStart.getMonth()+1).padStart(2,'0')}-${String(requestedStart.getDate()).padStart(2,'0')}`;
+  const requestedEndISO=`${requestedEnd.getFullYear()}-${String(requestedEnd.getMonth()+1).padStart(2,'0')}-${String(requestedEnd.getDate()).padStart(2,'0')}`;
+  return finalItems.filter(x=>{
+    // After occurrence moves are applied, show the item only if its final date
+    // belongs in the originally requested calendar window.
+    if(x.instanceDate<requestedStartISO || x.instanceDate>requestedEndISO) return false;
+    const k=[x.id,x.instanceDate,x.time].join('|');
+    if(seen.has(k)) return false;
+    seen.add(k); return true;
+  });
+}
+function visibleForProgram(a,p){
+  if(p==='ALL') return true;
+  if(p==='INTERNAL') return a.program==='INTERNAL';
+  if(p==='BOTH') return activityShowsOn(a,'AL')&&activityShowsOn(a,'MC');
+  return activityShowsOn(a,p);
+}
+function conflicts(instances){
+  const map=new Map(), ids=new Set();
+  const activeInstances=instances.filter(i=>!i.cancelled);
+  activeInstances.forEach(i=>{
+    const key=[i.instanceDate,i.time,i.location||'', i.program].join('|');
+    if(!i.time)return;
+    if(!map.has(key))map.set(key,[]);
+    map.get(key).push(i);
+  });
+  for(const arr of map.values()) if(arr.length>1) arr.forEach(x=>ids.add(x.id+'|'+x.instanceDate));
+  // planning block conflict with resident items at exact same time
+  const byDT=new Map();
+  activeInstances.forEach(i=>{
+    if(!i.time)return;
+    const key=i.instanceDate+'|'+i.time;
+    if(!byDT.has(key))byDT.set(key,[]);
+    byDT.get(key).push(i);
+  });
+  for(const arr of byDT.values()){
+    if(arr.some(x=>x.program==='INTERNAL') && arr.some(x=>x.resident)) arr.forEach(x=>ids.add(x.id+'|'+x.instanceDate));
+  }
+  return ids;
+}
+
+function hardConflictGroups(instances){
+  const active=instances.filter(i=>!i.cancelled&&i.time);
+  const groups=[];
+  const seen=new Set();
+  const add=(arr,reason)=>{
+    const uniq=[...new Map(arr.map(x=>[(x.id+'|'+x.instanceDate),x])).values()];
+    if(uniq.length<2)return;
+    const key=reason+'|'+uniq.map(x=>x.id+'|'+x.instanceDate).sort().join('~');
+    if(seen.has(key))return; seen.add(key);
+    groups.push({items:uniq,reason,date:uniq[0].instanceDate,time:uniq[0].time});
+  };
+  const resource=new Map();
+  active.forEach(i=>{
+    // A physical room/resource cannot be double-booked simply because the
+    // activities serve different resident calendars. Group hard conflicts by
+    // date + time + normalized location only; audience is intentionally not
+    // part of the resource key.
+    const location=String(i.location||'').trim().toLowerCase();
+    if(!location)return;
+    const key=[i.instanceDate,i.time,location].join('|');
+    if(!resource.has(key))resource.set(key,[]); resource.get(key).push(i);
+  });
+  for(const arr of resource.values()) if(arr.length>1) add(arr,'resource');
+  const byDT=new Map();
+  active.forEach(i=>{const key=i.instanceDate+'|'+i.time;if(!byDT.has(key))byDT.set(key,[]);byDT.get(key).push(i)});
+  for(const arr of byDT.values()){
+    const internal=arr.filter(x=>x.program==='INTERNAL');
+    const resident=arr.filter(x=>x.resident);
+    if(internal.length&&resident.length) add([...internal,...resident],'planning');
+  }
+  return groups;
+}
+
+// Hard conflicts can also be intentionally approved for one occurrence/group.
+// We store those approvals in the same review store so Recheck This Month clears both kinds.
+function hardConflictKey(g){
+  return [g.date,g.time,'HARD',g.reason,g.items.map(x=>x.id).sort().join('~')].join('|');
+}
+function hardConflictSignature(g){
+  const one=x=>{
+    const source=(x&&x.id&&Array.isArray(activities))?(activities.find(z=>z.id===x.id)||x):x;
+    const audiences=activityAudienceIds(source).slice().sort().join(',');
+    return [x.id,x.instanceDate,x.time||'',x.replacementName||x.name||'',x.location||'',x.program||'',audiences,x.detail||''].join('¦');
+  };
+  return [g.reason,...g.items.map(one).sort()].join('~~');
+}
+function splitHardConflictGroups(instances){
+  const keeps=getScheduleCheckKeeps();
+  const unresolved=[], reviewed=[];
+  hardConflictGroups(instances).forEach(g=>{
+    g.key=hardConflictKey(g); g.sig=hardConflictSignature(g);
+    (keeps[g.key]===g.sig?reviewed:unresolved).push(g);
+  });
+  return {unresolved,reviewed};
+}
+
+const SCHEDULE_CHECK_KEY='activityCottageScheduleChecksV1';
+function getScheduleCheckKeeps(){try{return JSON.parse(localStorage.getItem(SCHEDULE_CHECK_KEY)||'{}')}catch(e){return {}}}
+function saveScheduleCheckKeeps(v){localStorage.setItem(SCHEDULE_CHECK_KEY,JSON.stringify(v||{}))}
+function audienceOverlap(a,b){
+  // Schedule checks follow the same selectable-calendar audience model used
+  // by the Activity Library and print views. Resolve generated occurrences
+  // back to their source activities so custom-group assignments are retained.
+  const sourceFor=x=>(x&&x.id&&Array.isArray(activities))?(activities.find(z=>z.id===x.id)||x):x;
+  const aa=activityAudienceIds(sourceFor(a));
+  const bb=activityAudienceIds(sourceFor(b));
+  return aa.some(id=>bb.includes(id));
+}
+function scheduleCheckKey(a,b){return [a.instanceDate,a.time,[a.id,b.id].sort().join('~')].join('|')}
+function scheduleCheckSignature(a,b){
+  const one=x=>{
+    const source=(x&&x.id&&Array.isArray(activities))?(activities.find(z=>z.id===x.id)||x):x;
+    const audiences=activityAudienceIds(source).slice().sort().join(',');
+    return [x.id,x.instanceDate,x.time||'',x.replacementName||x.name||'',x.location||'',x.program||'',audiences,x.detail||''].join('¦');
+  };
+  return [one(a),one(b)].sort().join('~~');
+}
+function scheduleChecks(instances){
+  const active=instances.filter(x=>!x.cancelled&&x.resident!==false&&x.residentVisible!==false&&x.program!=='INTERNAL'&&x.time);
+  const keeps=getScheduleCheckKeeps(), groups=new Map(), pairs=[];
+  active.forEach(x=>{const k=x.instanceDate+'|'+x.time;if(!groups.has(k))groups.set(k,[]);groups.get(k).push(x)});
+  for(const arr of groups.values()) for(let i=0;i<arr.length;i++) for(let j=i+1;j<arr.length;j++){
+    const a=arr[i],b=arr[j]; if(!audienceOverlap(a,b))continue;
+    const key=scheduleCheckKey(a,b), sig=scheduleCheckSignature(a,b);
+    if(keeps[key]!==sig)pairs.push({a,b,key,sig});
+  }
+  return pairs;
+}
+function reviewedScheduleChecks(instances){
+  const active=instances.filter(x=>!x.cancelled&&x.resident!==false&&x.residentVisible!==false&&x.program!=='INTERNAL'&&x.time);
+  const keeps=getScheduleCheckKeeps(), groups=new Map(), pairs=[];
+  active.forEach(x=>{const k=x.instanceDate+'|'+x.time;if(!groups.has(k))groups.set(k,[]);groups.get(k).push(x)});
+  for(const arr of groups.values()) for(let i=0;i<arr.length;i++) for(let j=i+1;j<arr.length;j++){
+    const a=arr[i],b=arr[j]; if(!audienceOverlap(a,b))continue;
+    const key=scheduleCheckKey(a,b), sig=scheduleCheckSignature(a,b);
+    if(keeps[key]===sig)pairs.push({a,b,key,sig});
+  }
+  return pairs;
+}
+function recheckCurrentMonth(){
+  const prefix=`${viewYear}-${String(viewMonth+1).padStart(2,'0')}-`;
+  const keeps=getScheduleCheckKeeps();
+  let cleared=0;
+  Object.keys(keeps).forEach(k=>{if(k.startsWith(prefix)){delete keeps[k];cleared++}});
+  saveScheduleCheckKeeps(keeps);
+  renderMaster();
+}
+function updateMonthReviewStatus(schedulePairs,hardGroups){
+  const el=$('#monthReviewStatus'); if(!el)return;
+  const needs=(schedulePairs?.length||0)+(hardGroups?.length||0);
+  if(needs){el.className='review-status needs';el.textContent=`⚠ Review Needed • ${needs} decision${needs===1?'':'s'}`;}
+  else {el.className='review-status';el.textContent='✓ Schedule Reviewed';}
+}
+let selectedSchedulePair=null;
+function cancelOccurrenceDirect(x,note){
+  const a=activities.find(z=>z.id===x.id); if(!a)return;
+  const original=x.movedFrom||x.instanceDate;
+  a.occurrenceExceptions=(a.occurrenceExceptions||[]).filter(e=>e.originalDate!==original);
+  a.occurrenceExceptions.push({originalDate:original,action:'cancel',date:'',time:'',replacement:'',note:note||'Canceled during schedule review'});
+  showCancelUndo(a,original);
+}
+function openScheduleCheck(pair){
+  selectedSchedulePair=pair; const {a,b}=pair;
+  $('#scheduleCheckSummary').innerHTML=`<div class="notice"><b>Two resident activities start at the same time.</b><br><span class="tiny">They may be intentional choices in different locations, or one may need to be canceled for this occurrence.</span></div><h3>${a.instanceDate} • ${fmtTime(a.time)}</h3><p><b>${a.replacementName||a.name}</b>${a.location?' • '+a.location:''}<br><b>${b.replacementName||b.name}</b>${b.location?' • '+b.location:''}</p><p>Do you want to keep both, or cancel one for this occurrence?</p>`;
+  const esc=t=>String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  $('#scheduleCheckActions').innerHTML=`<button class="btn primary" id="scKeepBoth">Keep Both</button><button class="btn danger" id="scCancelA">Cancel ${esc(a.replacementName||a.name)} This Time</button><button class="btn danger" id="scCancelB">Cancel ${esc(b.replacementName||b.name)} This Time</button>`;
+  $('#scKeepBoth').onclick=()=>{const keeps=getScheduleCheckKeeps();keeps[pair.key]=pair.sig||scheduleCheckSignature(pair.a,pair.b);saveScheduleCheckKeeps(keeps);scheduleCheckDialog.close();renderMaster()};
+  $('#scCancelA').onclick=()=>{cancelOccurrenceDirect(a,'Canceled during schedule check');save();scheduleCheckDialog.close()};
+  $('#scCancelB').onclick=()=>{cancelOccurrenceDirect(b,'Canceled during schedule check');save();scheduleCheckDialog.close()};
+  scheduleCheckDialog.showModal();
+}
+function openHardConflict(g){
+  const esc=t=>String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const reason=g.reason==='planning'?'a hidden Planning Block occurs at the same time':'the same resource/location appears to be in use';
+  $('#scheduleCheckSummary').innerHTML=`<div class="notice"><b>Hard Conflict</b><br><span class="tiny">The builder flagged this because ${reason}. If this is intentional, you can approve it for this occurrence only.</span></div><h3>${g.date} • ${fmtTime(g.time)}</h3><p>${g.items.map(x=>`<b>${esc(x.replacementName||x.name)}</b>${x.location?' • '+esc(x.location):''}`).join('<br>')}</p><p>Do you want to keep these activities as scheduled, cancel one, or go back and edit the calendar?</p>`;
+  let actions=`<button class="btn primary" id="hcKeepBoth">Keep Both / Approve This Occurrence</button>`;
+  g.items.forEach((x,i)=>{actions+=`<button class="btn danger hcCancel" data-i="${i}">Cancel ${esc(x.replacementName||x.name)} This Time</button>`});
+  $('#scheduleCheckActions').innerHTML=actions;
+  $('#hcKeepBoth').onclick=()=>{const keeps=getScheduleCheckKeeps();keeps[g.key]=g.sig||hardConflictSignature(g);saveScheduleCheckKeeps(keeps);scheduleCheckDialog.close();renderMaster()};
+  $$('.hcCancel').forEach(btn=>btn.onclick=()=>{const x=g.items[Number(btn.dataset.i)];cancelOccurrenceDirect(x,'Canceled during hard conflict review');save();scheduleCheckDialog.close()});
+  scheduleCheckDialog.showModal();
+}
+
+function renderMaster(){
+  const first=new Date(viewYear,viewMonth,1), last=new Date(viewYear,viewMonth+1,0);
+  const start=new Date(first); start.setDate(first.getDate()-first.getDay());
+  const end=new Date(last); end.setDate(last.getDate()+(6-last.getDay()));
+  const allInst=instancesForRange(start,end);
+  const inst=allInst.filter(x=>visibleForProgram(x,currentProgram));
+  // Hard room/resource conflicts must be checked across ALL calendars, because
+  // a physical room can only be used once even when the activities belong to
+  // different resident groups. The selected Master tab still controls what is
+  // displayed and which conflict badges appear in this view.
+  const monthPrefix=`${viewYear}-${String(viewMonth+1).padStart(2,'0')}-`;
+  const reviewInst=inst.filter(x=>String(x.instanceDate||'').startsWith(monthPrefix));
+  const allReviewInst=allInst.filter(x=>String(x.instanceDate||'').startsWith(monthPrefix));
+  const displayHard=splitHardConflictGroups(allInst);
+  const monthHard=splitHardConflictGroups(allReviewInst);
+  const displayConflictIds=new Set(); displayHard.unresolved.forEach(g=>g.items.forEach(x=>displayConflictIds.add(x.id+'|'+x.instanceDate)));
+  const conflictIds=new Set(); monthHard.unresolved.forEach(g=>g.items.forEach(x=>conflictIds.add(x.id+'|'+x.instanceDate)));
+  const displayHardReviewedIds=new Set(); displayHard.reviewed.forEach(g=>g.items.forEach(x=>displayHardReviewedIds.add(x.id+'|'+x.instanceDate)));
+  // Month-scoped reviewed hard conflicts must also suppress the lower-level Schedule Check.
+  // One Keep Both decision is final for that occurrence/pair until Recheck This Month or a meaningful activity change.
+  const monthHardReviewedIds=new Set(); monthHard.reviewed.forEach(g=>g.items.forEach(x=>monthHardReviewedIds.add(x.id+'|'+x.instanceDate)));
+  const displaySchedulePairsAll=scheduleChecks(inst);
+  const displayReviewedPairsAll=reviewedScheduleChecks(inst);
+  const schedulePairsAll=scheduleChecks(reviewInst);
+  // Warning hierarchy: unresolved hard conflicts take priority. Once a hard conflict is approved,
+  // it becomes blue REVIEWED instead of remaining red.
+  const pairHasHardConflict=(p,ids)=>ids.has(p.a.id+'|'+p.a.instanceDate)||ids.has(p.b.id+'|'+p.b.instanceDate);
+  const displaySchedulePairs=displaySchedulePairsAll.filter(p=>!pairHasHardConflict(p,displayConflictIds)&&!pairHasHardConflict(p,displayHardReviewedIds));
+  const displayReviewedPairs=displayReviewedPairsAll.filter(p=>!pairHasHardConflict(p,displayConflictIds));
+  const schedulePairs=schedulePairsAll.filter(p=>!pairHasHardConflict(p,conflictIds)&&!pairHasHardConflict(p,monthHardReviewedIds));
+  const scheduleIds=new Set(); displaySchedulePairs.forEach(p=>{scheduleIds.add(p.a.id+'|'+p.a.instanceDate);scheduleIds.add(p.b.id+'|'+p.b.instanceDate)});
+  const reviewedIds=new Set(displayHardReviewedIds); displayReviewedPairs.forEach(p=>{reviewedIds.add(p.a.id+'|'+p.a.instanceDate);reviewedIds.add(p.b.id+'|'+p.b.instanceDate)});
+
+  const c=$('#calendar'); c.innerHTML='';
+  ['SUN','MON','TUE','WED','THU','FRI','SAT'].forEach(x=>{const d=document.createElement('div');d.className='dow';d.textContent=x;c.appendChild(d)});
+  const day=new Date(start);
+  while(day<=end){
+    const iso=`${day.getFullYear()}-${String(day.getMonth()+1).padStart(2,'0')}-${String(day.getDate()).padStart(2,'0')}`;
+    const isOutside=day.getMonth()!==viewMonth;
+    const cell=document.createElement('div'); cell.className='day'+(isOutside?' outside':'');
+    const dateLabel=isOutside?`${day.toLocaleString('en-US',{month:'short'}).toUpperCase()} ${day.getDate()}`:`${day.getDate()}`;
+    cell.innerHTML=`<div class="date${isOutside?' outside-link':''}" title="${isOutside?'Open '+day.toLocaleString('en-US',{month:'long',year:'numeric'}):''}">${dateLabel}</div>`;
+    if(isOutside){
+      cell.querySelector('.date').onclick=(ev)=>{ev.stopPropagation();viewYear=day.getFullYear();viewMonth=day.getMonth();refreshSelectedMonth(true)};
+    }
+    inst.filter(x=>x.instanceDate===iso).sort((a,b)=>(a.time||'').localeCompare(b.time||'')).forEach(x=>{
+      const el=document.createElement('div');
+      const cls=x.program==='INTERNAL'?'internal':(currentProgram==='MC' && x.program==='BOTH' && x.highlight)?'both':x.program==='MC'?'mc':'';
+      const eventKey=x.id+'|'+x.instanceDate;
+      const hasScheduleCheck=scheduleIds.has(eventKey);
+      const hasConflict=displayConflictIds.has(eventKey);
+      const hasReviewed=!hasConflict&&!hasScheduleCheck&&!x.cancelled&&reviewedIds.has(eventKey);
+      el.className='event '+cls+(hasConflict?' warning':'')+(hasScheduleCheck?' schedule-check':'')+(hasReviewed?' reviewed-overlap':'')+(x.cancelled?' cancelled':'');
+      el.innerHTML=`<span class="event-main"><span class="t">${fmtTime(x.time)}</span> ${x.replacementName||x.name}${x.detail?` — ${x.detail}`:''}</span>${hasConflict?'<span class="conflict-badge">⚠ CONFLICT</span>':''}${hasScheduleCheck?'<span class="schedule-check-badge">SCHEDULE CHECK</span>':''}${hasReviewed?'<span class="reviewed-badge">✓ REVIEWED</span>':''}${x.cancelled?'<span class="cancel-badge">CANCELED</span>':''}${x.movedFrom?' ↪':''}${x.program==='INTERNAL'?'<span class="lock">🔒</span>':''}`;
+      el.onclick=()=>openOccurrence(x);
+      cell.appendChild(el);
+    });
+    c.appendChild(cell);
+    day.setDate(day.getDate()+1);
+  }
+  $('#monthTitle').textContent=first.toLocaleString('en-US',{month:'long',year:'numeric'});
+
+  const visibleEventKeys=new Set(reviewInst.map(x=>x.id+'|'+x.instanceDate));
+  const hardGroups=monthHard.unresolved.filter(g=>g.items.some(x=>visibleEventKeys.has(x.id+'|'+x.instanceDate)));
+  updateMonthReviewStatus(schedulePairs,hardGroups);
+  let html='';
+  if(hardGroups.length){
+    html+=`<div class="notice"><b>${hardGroups.length} hard conflict${hardGroups.length===1?'':'s'} to review.</b><br><span class="tiny">Each conflict counts as one decision. You can fix it or intentionally approve it for this occurrence.</span></div>`;
+    hardGroups.slice(0,8).forEach((g,i)=>{
+      const names=g.items.map(x=>`<b>${x.replacementName||x.name}</b>`).join(' + ');
+      html+=`<div class="notice">${g.date} • ${fmtTime(g.time)} — ${names} <button class="btn soft hardReviewBtn" data-hard="${i}" style="padding:4px 8px;margin-left:5px">Review</button></div>`;
+    });
+  } else html='<div class="notice ok"><b>No unresolved hard conflicts found in this view.</b></div>';
+  if(schedulePairs.length){
+    html+=`<div class="schedule-review"><b>${schedulePairs.length} schedule check${schedulePairs.length===1?'':'s'} to review.</b><br><span class="tiny">Two resident activities for the same audience start at the same time. Different locations are still checked. Pairs with a hard conflict appear only in the red hard-conflict section above.</span>`;
+    schedulePairs.slice(0,8).forEach((p,i)=>{html+=`<div class="pair">${p.a.instanceDate} • ${fmtTime(p.a.time)} — <b>${p.a.name}</b> + <b>${p.b.name}</b> <button class="btn soft scheduleReviewBtn" data-pair="${i}" style="padding:4px 8px;margin-left:5px">Review</button></div>`});
+    html+='</div>';
+  } else if(!hardGroups.length){
+    html+=`<div class="notice ok" style="margin-top:8px"><b>✓ Schedule review is clear for this view.</b><br><span class="tiny">Previously approved Keep Both choices stay approved unless one of those activities changes. Use Recheck This Month whenever you want to review them again.</span></div>`;
+  }
+  html+=`<div class="tiny" style="margin-top:10px;padding:8px 10px;border-radius:8px;background:#f8fafc;border:1px solid #d7dde5"><b>Master Calendar colors:</b> <span style="color:#a80700;font-weight:800">RED = hard conflict</span> • <span style="color:#c96a00;font-weight:800">ORANGE = needs review</span> • <span style="color:#2563eb;font-weight:800">BLUE = reviewed / keep both</span> • <span style="color:#374151;font-weight:800">GRAY = canceled</span></div>`;
+  html+=`<div class="tiny" style="margin-top:8px;color:#666">Gray edge dates show the end of the previous month and beginning of the next month for planning context. Their activities are visible here, but they do not affect ${first.toLocaleString('en-US',{month:'long'})}'s review status. Click an edge date to open that month.</div>`;
+  $('#checks').innerHTML=html;
+  $$('.scheduleReviewBtn').forEach(btn=>btn.onclick=()=>openScheduleCheck(schedulePairs[Number(btn.dataset.pair)]));
+  $$('.hardReviewBtn').forEach(btn=>btn.onclick=()=>openHardConflict(hardGroups[Number(btn.dataset.hard)]));
+}
+
+const recheckMonthBtn=$('#recheckMonthBtn');
+if(recheckMonthBtn) recheckMonthBtn.addEventListener('click',()=>{
+  const label=new Date(viewYear,viewMonth,1).toLocaleString('en-US',{month:'long',year:'numeric'});
+  if(confirm(`Recheck ${label}?\n\nThis clears only Keep Both / approved conflict / review acknowledgments for this month. It will NOT undo cancellations, moves, exceptions, one-time events, or activity details.`)) recheckCurrentMonth();
+});
+
+function weeksForSelectedMonth(){
+  const first=new Date(viewYear,viewMonth,1), last=new Date(viewYear,viewMonth+1,0);
+  const start=new Date(first); start.setDate(first.getDate()-first.getDay());
+  const weeks=[];
+  let s=new Date(start);
+  while(s<=last){
+    let e=new Date(s);e.setDate(s.getDate()+6);
+    weeks.push([new Date(s),e]);
+    s.setDate(s.getDate()+7);
+  }
+  return weeks;
+}
+function renderWeekSelect(){
+  const sel=$('#weekSelect'); if(!sel)return;
+  const prev=Number(sel.value||0); sel.innerHTML='';
+  const weeks=weeksForSelectedMonth();
+  weeks.forEach((w,i)=>{
+    const [s,e]=w;
+    const label=`${s.toLocaleString('en-US',{month:'short'})} ${s.getDate()} – ${e.toLocaleString('en-US',{month:'short'})} ${e.getDate()}`;
+    const o=document.createElement('option');o.value=i;o.textContent=label;sel.appendChild(o);
+  });
+  sel.value=String(Math.min(prev,Math.max(0,weeks.length-1)));
+}
+function handleWeeklyCalendarChange(program){
+  const sel=document.getElementById('printProgram');
+  if(sel && program && sel.value!==program) sel.value=program;
+  loadWeeklyStyleControls(program||sel?.value||'AL');
+  renderPreview();
+}
+function renderPreview(){
+  const program=$('#printProgram')?.value||'AL';
+  const weeks=weeksForSelectedMonth();
+  const idx=Number($('#weekSelect').value||0), [s,e]=weeks[idx];
+  const inst=instancesForRange(s,e).filter(x=>x.residentVisible!==false && !x.cancelled && activityShowsOn(x,program));
+  // Directly merge Flexible Monthly entries saved by Set Dates / Project.
+  const directFlexSeen=new Set(inst.map(x=>`${x.id}|${x.instanceDate}`));
+  for(const a of activities){
+    if(!a.flexibleDatesSafe || a.residentVisible===false || a.resident===false) continue;
+    if(!activityShowsOn(a,program)) continue;
+    let cursor=new Date(s.getFullYear(),s.getMonth(),1);
+    const finalMonth=new Date(e.getFullYear(),e.getMonth(),1);
+    while(cursor<=finalMonth){
+      const mk=`${cursor.getFullYear()}-${String(cursor.getMonth()+1).padStart(2,'0')}`;
+      const rows=(a.flexibleDatesSafe && a.flexibleDatesSafe[mk]) || [];
+      for(const row of rows){
+        if(!row.date) continue;
+        const startIso=`${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,'0')}-${String(s.getDate()).padStart(2,'0')}`;
+        const endIso=`${e.getFullYear()}-${String(e.getMonth()+1).padStart(2,'0')}-${String(e.getDate()).padStart(2,'0')}`;
+        const sig=`${a.id}|${row.date}`;
+        if(row.date>=startIso && row.date<=endIso && !directFlexSeen.has(sig)){
+          inst.push(Object.assign({},a,{instanceDate:row.date,detail:row.detail||'',cancelled:false}));
+          directFlexSeen.add(sig);
+        }
+      }
+      cursor=new Date(cursor.getFullYear(),cursor.getMonth()+1,1);
+    }
+  }
+  inst.sort((a,b)=>(a.instanceDate+(a.time||'')).localeCompare(b.instanceDate+(b.time||'')));
+  const days=[];
+  for(let i=0;i<7;i++){const d=new Date(s);d.setDate(s.getDate()+i);days.push(d)}
+  const rangeText=`${s.toLocaleString('en-US',{month:'short'}).toUpperCase()} ${s.getDate()} - ${e.toLocaleString('en-US',{month:'short'}).toUpperCase()} ${e.getDate()}`;
+  let html=`<div class="print-title"><strong>${rangeText}</strong></div><div class="week-grid">`;
+  for(const d of days){
+    const iso=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const items=inst.filter(x=>x.instanceDate===iso).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+    html+=`<div class="wday"><h3>${d.toLocaleString('en-US',{weekday:'long'}).toUpperCase()}</h3><div class="wdate">${d.getDate()}</div><div class="witems">`;
+    items.forEach(x=>{
+      html+=`<div class="witem ${(program==='MC' && activityAudienceIds(x).length>1 && x.highlight)?'shared':''}"><div class="time">${fmtTime(x.time)}</div><div>${x.replacementName||x.name}${x.detail?` — ${x.detail}`:''}${x.location?`<br><span style="font-size:inherit">${x.location}</span>`:''}</div></div>`;
+    });
+    html+='</div></div>';
+  }
+  html+='</div>';
+  $('#printSheet').innerHTML=html;
+
+  applyPrintOptions();
+}
+
+
+function residentInstancesForRange(start,end,program){
+  const inst=instancesForRange(start,end).filter(x=>x.residentVisible!==false && x.resident!==false && !x.cancelled && activityShowsOn(x,program));
+  const seen=new Set(inst.map(x=>`${x.id}|${x.instanceDate}`));
+  const startIso=`${start.getFullYear()}-${String(start.getMonth()+1).padStart(2,'0')}-${String(start.getDate()).padStart(2,'0')}`;
+  const endIso=`${end.getFullYear()}-${String(end.getMonth()+1).padStart(2,'0')}-${String(end.getDate()).padStart(2,'0')}`;
+  for(const a of activities){
+    if(!a.flexibleDatesSafe || a.residentVisible===false || a.resident===false) continue;
+    if(!activityShowsOn(a,program)) continue;
+    for(const mk of Object.keys(a.flexibleDatesSafe||{})){
+      for(const row of (a.flexibleDatesSafe[mk]||[])){
+        if(!row.date || row.date<startIso || row.date>endIso) continue;
+        const sig=`${a.id}|${row.date}`;
+        if(seen.has(sig)) continue;
+        inst.push(Object.assign({},a,{instanceDate:row.date,detail:row.detail||'',cancelled:false}));
+        seen.add(sig);
+      }
+    }
+  }
+  return inst.sort((a,b)=>(a.instanceDate+(a.time||'')).localeCompare(b.instanceDate+(b.time||'')));
+}
+function renderMonthlyPreview(){
+  const program=$('#monthlyPrintProgram')?.value||'AL';
+  const fs=Number($('#monthlyPrintFontSize')?.value||12);
+  $('#monthlyPrintSheet')?.classList.toggle('mc-monthly-wide',program==='MC');
+  const y=viewYear||2026, m=(typeof viewMonth==='number'?viewMonth:9);
+  const first=new Date(y,m,1), last=new Date(y,m+1,0);
+  const gridStart=new Date(first); gridStart.setDate(first.getDate()-first.getDay());
+  const gridEnd=new Date(last); gridEnd.setDate(last.getDate()+(6-last.getDay()));
+  const inst=residentInstancesForRange(gridStart,gridEnd,program);
+  let html=`<div class="monthly-print-title"><h2>${first.toLocaleString('en-US',{month:'long'}).toUpperCase()}</h2></div><div class="monthly-grid">`;
+  ['SUN','MON','TUE','WED','THU','FRI','SAT'].forEach(d=>html+=`<div class="monthly-dow">${d}</div>`);
+  for(let d=new Date(gridStart);d<=gridEnd;d.setDate(d.getDate()+1)){
+    const iso=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const inMonth=d.getMonth()===m;
+    const items=inMonth?inst.filter(x=>x.instanceDate===iso):[];
+    html+=`<div class="monthly-day ${inMonth?'':'outside'}">`;
+    if(inMonth){
+      html+=`<div class="monthly-date">${d.getDate()}</div>`;
+      items.forEach(x=>html+=`<div class="monthly-item ${(program==='MC' && activityAudienceIds(x).length>1 && x.highlight)?'shared':''}"><span class="mt">${fmtTime(x.time)}</span> ${x.replacementName||x.name}${x.detail?` — ${x.detail}`:''}</div>`);
+    }
+    html+='</div>';
+  }
+  html+='</div>';
+  $('#monthlyPrintSheet').innerHTML=html;
+  $('#monthlyPrintSheet').style.setProperty('--monthly-font-size',fs+'pt');
+  if(typeof applyMonthlyStyle==='function') applyMonthlyStyle();
+}
+function renderDailyPreview(){
+  const program=$('#dailyPrintProgram')?.value||'AL';
+  const defaultIso=`${viewYear}-${String(viewMonth+1).padStart(2,'0')}-01`;
+  const iso=$('#dailyPrintDate')?.value||defaultIso;
+  const fs=Number($('#dailyPrintFontSize')?.value||getDailyStyle(program).activityFontSize||36);
+  const d=new Date(iso+'T00:00:00');
+  // Use the full selected day as the range. One-time activities are normalized
+  // at noon, so a midnight-to-midnight zero-length range could omit them.
+  const dayEnd=new Date(iso+'T23:59:59');
+  const inst=residentInstancesForRange(d,dayEnd,program).filter(x=>x.instanceDate===iso);
+  const name=program==='MC'?'Memory Care':'Assisted Living';
+  let html=`<div class="daily-head"><div class="daily-day-title">${d.toLocaleString('en-US',{weekday:'long'})}</div><div class="daily-date-title">${d.toLocaleString('en-US',{month:'long',day:'numeric'})}</div></div><div class="daily-items">`;
+  if(!inst.length) html+='<div class="daily-empty">No resident activities scheduled.</div>';
+  inst.forEach(x=>html+=`<div class="daily-item ${(program==='MC' && activityAudienceIds(x).length>1 && x.highlight)?'shared':''}"><div class="dt">${fmtTime(x.time)}</div><div><div class="dn">${x.replacementName||x.name}${x.detail?` — ${x.detail}`:''}</div>${x.location?`<div>${x.location}</div>`:''}</div></div>`);
+  html+='</div>';
+  $('#dailyPrintSheet').innerHTML=html;
+  $('#dailyPrintSheet').style.setProperty('--daily-font-size',fs+'pt');
+  if(typeof applyDailyStyle==='function') applyDailyStyle();
+}
+let selectedOccurrence=null, selectedAction='';
+function openOccurrence(x){
+  selectedOccurrence=x;
+  $('#occurrenceSummary').innerHTML=`<h3>${x.replacementName||x.name}</h3><p>${x.instanceDate} • ${fmtTime(x.time)}${x.location?' • '+x.location:''}</p>${x.detail?`<p><b>Detail:</b> ${x.detail}</p>`:''}${x.cancelled?'<div class="notice"><b>Canceled for this occurrence.</b><br><span class="tiny">Restore it here if the cancellation was accidental.</span></div>':''}`;
+  const restore=$('#occRestore'), cancel=$('#occCancel');
+  if(restore) restore.style.display=x.cancelled?'block':'none';
+  if(cancel) cancel.style.display=x.cancelled?'none':'block';
+  occurrenceDialog.showModal();
+}
+function startOccAction(action){selectedAction=action;occurrenceDialog.close();$('#oaDate').value=selectedOccurrence.instanceDate;$('#oaTime').value=selectedOccurrence.time||'';$('#oaReplacement').value=selectedOccurrence.replacementName||'';$('#oaNote').value=selectedOccurrence.exceptionNote||'';$('#oaMoveFields').style.display=['move','edit'].includes(action)?'block':'none';$('#oaReplaceFields').style.display=action==='replace'?'block':'none';$('#occActionTitle').textContent=action[0].toUpperCase()+action.slice(1)+' This Occurrence';occActionDialog.showModal()}
+function storeOccurrence(action){const a=activities.find(z=>z.id===selectedOccurrence.id), original=selectedOccurrence.movedFrom||selectedOccurrence.instanceDate;a.occurrenceExceptions=(a.occurrenceExceptions||[]).filter(e=>e.originalDate!==original);a.occurrenceExceptions.push({originalDate:original,action,date:$('#oaDate').value,time:$('#oaTime').value,replacement:$('#oaReplacement').value.trim(),note:$('#oaNote').value.trim()});save();occActionDialog.close();occurrenceDialog.close()}
+let lastCancellation=null, cancelUndoTimer=null;
+function showCancelUndo(activity,originalDate){
+  lastCancellation={activityId:activity.id,originalDate};
+  const toast=$('#cancelUndoToast'), label=$('#cancelUndoText');
+  if(label) label.textContent=`${activity.name} canceled for ${originalDate}.`;
+  if(toast) toast.classList.add('show');
+  clearTimeout(cancelUndoTimer); cancelUndoTimer=setTimeout(hideCancelUndo,10000);
+}
+function hideCancelUndo(){const toast=$('#cancelUndoToast');if(toast)toast.classList.remove('show');clearTimeout(cancelUndoTimer)}
+function restoreOccurrence(activityId,originalDate){
+  const a=activities.find(z=>z.id===activityId); if(!a)return;
+  a.occurrenceExceptions=(a.occurrenceExceptions||[]).filter(e=>!(e.originalDate===originalDate&&e.action==='cancel'));
+  save();
+}
+function cancelSelectedOccurrence(){
+  if(!selectedOccurrence)return; const a=activities.find(z=>z.id===selectedOccurrence.id); if(!a)return;
+  const original=selectedOccurrence.movedFrom||selectedOccurrence.instanceDate;
+  a.occurrenceExceptions=(a.occurrenceExceptions||[]).filter(e=>e.originalDate!==original);
+  a.occurrenceExceptions.push({originalDate:original,action:'cancel',date:'',time:'',replacement:'',note:'Canceled from Master Calendar'});
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(activities)); renderAll(); occurrenceDialog.close(); showCancelUndo(a,original);
+}
+function restoreSelectedOccurrence(){if(!selectedOccurrence)return;const original=selectedOccurrence.movedFrom||selectedOccurrence.instanceDate;restoreOccurrence(selectedOccurrence.id,original);occurrenceDialog.close();hideCancelUndo()}
+function undoLastCancellation(){if(!lastCancellation)return;const c=lastCancellation;lastCancellation=null;restoreOccurrence(c.activityId,c.originalDate);hideCancelUndo()}
+
+
+let singleFillActivityId=null;
+function openSingleFill(id){
+  window._singleFillActivityId=id;
+  const _sfd=$('#fillOneDialog')||$('#singleFillDialog'); if(_sfd) _sfd.dataset.activityId=id;
+  singleFillActivityId=id;
+  const a=activities.find(x=>x.id===id); if(!a)return;
+  const start=new Date(viewYear,viewMonth,1), end=new Date(viewYear,viewMonth+1,0);
+  const monthKey=`${viewYear}-${String(viewMonth+1).padStart(2,'0')}`;
+  const monthName=start.toLocaleString('en-US',{month:'long',year:'numeric'});
+  const label=a.detailLabel||'Detail';
+  $('#singleFillTitle').textContent=`${monthName} — ${a.name}`;
+  $('#singleFillHelp').innerHTML=`Enter each <b>${label}</b> for this month. These are the same entries used by <b>Master Calendar → Fill This Month</b>.`;
+  const body=$('#singleFillBody'); body.innerHTML='';
+  const inst=instancesForRange(start,end).filter(x=>x.id===id && !x.cancelled);
+  if(!inst.length){
+    body.innerHTML='<div class="notice">This activity does not have recurring dates for this month yet. Use Edit to set its day(s) and time first.</div>';
+  } else {
+    inst.forEach(x=>{
+      const original=x.movedFrom||x.instanceDate;
+      const d=new Date(x.instanceDate+'T12:00:00');
+      const saved=(a.monthlyDetails||{})[monthKey]?.[original] ?? x.detail ?? '';
+      body.insertAdjacentHTML('beforeend',
+        `<div style="display:grid;grid-template-columns:160px 1fr;gap:10px;align-items:center;margin:8px 0">
+          <div style="font-weight:800">${d.toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric'})}</div>
+          <input class="single-fill-input" data-original="${original}" data-month="${monthKey}" placeholder="${label}" value="${String(saved).replace(/"/g,'&quot;')}">
+        </div>`);
+    });
+  }
+  singleFillDialog.showModal();
+}
+function saveSingleFill(){
+  const a=activities.find(x=>x.id===singleFillActivityId); if(!a)return;
+  $$('.single-fill-input').forEach(inp=>{
+    a.monthlyDetails=a.monthlyDetails||{};
+    a.monthlyDetails[inp.dataset.month]=a.monthlyDetails[inp.dataset.month]||{};
+    a.monthlyDetails[inp.dataset.month][inp.dataset.original]=inp.value.trim();
+  });
+  save(); singleFillDialog.close();
+}
+
+function openFillMonth(){const start=new Date(viewYear,viewMonth,1),end=new Date(viewYear,viewMonth+1,0),key=`${viewYear}-${String(viewMonth+1).padStart(2,'0')}`;$('#fillMonthTitle').textContent='Fill '+start.toLocaleString('en-US',{month:'long',year:'numeric'});let h='';activities.filter(a=>a.changingDetail&&(a.days||[]).length).forEach(a=>{h+=`<div class="card" style="margin-top:12px"><h3>${a.name}</h3><div class="tiny">${a.detailLabel||'Detail'} • ${fmtTime(a.time)}</div>`;instancesForRange(start,end).filter(x=>x.id===a.id&&!x.cancelled).forEach(x=>{const original=x.movedFrom||x.instanceDate;const d=new Date(x.instanceDate+'T12:00:00');const val=(a.monthlyDetails||{})[key]?.[original]||'';h+=`<label>${d.toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric'})}</label><input class="monthFill" data-id="${a.id}" data-key="${key}" data-date="${original}" value="${val.replace(/"/g,'&quot;')}" placeholder="${a.detailLabel||'Detail'}">`});h+='</div>'});$('#fillMonthBody').innerHTML=h||'<div class="notice">No changing-detail slots configured.</div>';fillMonthDialog.showModal()}
+function saveFill(){document.querySelectorAll('.monthFill').forEach(i=>{const a=activities.find(z=>z.id===i.dataset.id);a.monthlyDetails=a.monthlyDetails||{};a.monthlyDetails[i.dataset.key]=a.monthlyDetails[i.dataset.key]||{};a.monthlyDetails[i.dataset.key][i.dataset.date]=i.value.trim()});save();fillMonthDialog.close()}
+
+function formOccurrenceDates(year,month){
+  const type=$('#fType').value;
+  const dates=[];
+  if(type==='one-time'){
+    const v=$('#fDate').value;
+    if(v && v.slice(0,7)===`${year}-${String(month+1).padStart(2,'0')}`) dates.push(v);
+    return dates;
+  }
+  if(type==='monthly-nth'){
+    const target=Number($('#fNthDay').value), nth=($$('#fNthChecks input:checked').map(c=>c.value)[0]||'1');
+    let chosen=null;
+    if(nth==='last'){
+      const last=new Date(year,month+1,0);
+      const delta=(last.getDay()-target+7)%7;
+      chosen=new Date(year,month,last.getDate()-delta);
+    } else {
+      const first=new Date(year,month,1);
+      const delta=(target-first.getDay()+7)%7;
+      chosen=new Date(year,month,1+delta+(Number(nth)-1)*7);
+      if(chosen.getMonth()!==month) chosen=null;
+    }
+    if(chosen) dates.push(`${year}-${String(month+1).padStart(2,'0')}-${String(chosen.getDate()).padStart(2,'0')}`);
+    return dates;
+  }
+  const selected=$$('#dayChecks input:checked').map(x=>Number(x.value));
+  if(!selected.length) return dates;
+  const last=new Date(year,month+1,0).getDate();
+  for(let day=1;day<=last;day++){
+    const d=new Date(year,month,day);
+    if(selected.includes(d.getDay())) dates.push(`${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`);
+  }
+  return dates;
+}
+function renderEditorMonthDetails(){
+  const wrap=$('#editorMonthDetails'), body=$('#editorMonthDetailsBody');
+  if(!$('#fChangingDetail').checked){wrap.style.display='none';body.innerHTML='';return;}
+  wrap.style.display='block';
+  const monthKey=`${viewYear}-${String(viewMonth+1).padStart(2,'0')}`;
+  const monthName=new Date(viewYear,viewMonth,1).toLocaleString('en-US',{month:'long',year:'numeric'});
+  const label=$('#fDetailLabel').value.trim()||'Detail';
+  $('#editorMonthDetailsTitle').textContent=`${monthName} — ${label}`;
+  const dates=formOccurrenceDates(viewYear,viewMonth);
+  const id=$('#editId').value;
+  const existing=id?activities.find(x=>x.id===id):null;
+  const saved=existing?.monthlyDetails?.[monthKey]||{};
+  if(!dates.length){
+    body.innerHTML='<div class="notice">Choose the recurring day(s) above and this month’s dates will appear here.</div>';
+    return;
+  }
+  body.innerHTML=dates.map(iso=>{
+    const d=new Date(iso+'T12:00:00');
+    const val=(saved[iso]||'').replace(/"/g,'&quot;');
+    return `<div style="display:grid;grid-template-columns:145px 1fr;gap:8px;align-items:center;margin:7px 0">
+      <div style="font-weight:800;font-size:13px">${d.toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric'})}</div>
+      <input class="editorMonthFill" data-date="${iso}" value="${val}" placeholder="${label}">
+    </div>`;
+  }).join('');
+}
+
+function openEditor(id=null){
+  const a=id?activities.find(x=>x.id===id):null;
+  $('#dialogTitle').textContent=a?'Edit Activity':'Add Activity';
+  $('#editId').value=a?.id||'';
+  $('#fName').value=a?.name||'';
+  $('#fType').value=a?.type||(currentListKind!=='ONGOING'?'one-time':'recurring');
+  rebuildEditorProgramOptions();
+  const desiredProgram=a?.program||(currentListProgram!=='ALL'?currentListProgram:'AL');
+  $('#fProgram').value=[...$('#fProgram').options].some(o=>o.value===desiredProgram)?desiredProgram:'AL';
+  renderEditorAudienceChoices(a);
+  $('#fLocation').value=a?.location||'';
+  $('#fTime').value=a?.time||'';
+  $('#fDate').value=a?.date||'';
+  $('#fResident').checked=a?a.resident!==false:true;
+  $('#fHighlight').checked=!!a?.highlight;
+  $('#fDetail').value=a?.detail||'';
+  $('#fChangingDetail').checked=!!a?.changingDetail;
+  $('#fDetailLabel').value=a?.detailLabel||'';
+  $('#fNotes').value=a?.notes||'';
+  const rotation=a?.rotation||['','','','',''];
+  [1,2,3,4,5].forEach((n,i)=>$('#rot'+n).value=rotation[i]||'');
+  $$('#fNthChecks input').forEach(c=>c.checked=(a?.nthWeeks||[a?.nth||'1']).map(String).includes(c.value));
+  $('#fNthDay').value=String(a?.nthDay ?? 1);
+  const ex=(a?.exceptions||[])[0]||{};
+  $('#fExceptionMonth').value=ex.month||'';
+  $('#fExceptionDate').value=ex.date||'';
+  $('#fExceptionTime').value=ex.time||'';
+  $('#fExceptionNote').value=ex.note||'';
+  toggleRecurrenceFields();
+  $$('#dayChecks input').forEach(ch=>ch.checked=(a?.days||[]).includes(Number(ch.value)));
+  renderEditorMonthDetails();
+  $('#deleteActivity').style.display=a?'inline-block':'none';
+  activityDialog.showModal();
+}
+function toggleRecurrenceFields(){
+  const type=$('#fType').value;
+  $('#rotationFields').style.display=type==='rotation'?'block':'none';
+  $('#monthlyNthFields').style.display=type==='monthly-nth'?'block':'none';
+  $('#exceptionFields').style.display=['recurring','slot','rotation','monthly-nth'].includes(type)?'block':'none';
+  $('#regularDayFields').style.display=type==='monthly-nth'?'none':'block';
+}
+$('#fType').onchange=()=>{toggleRecurrenceFields();renderEditorMonthDetails()};
+$('#fChangingDetail').onchange=renderEditorMonthDetails;
+$('#fDetailLabel').oninput=renderEditorMonthDetails;
+$$('#fNthChecks input').forEach(c=>c.onchange=renderEditorMonthDetails);
+$('#fNthDay').onchange=renderEditorMonthDetails;
+$$('#dayChecks input').forEach(ch=>ch.addEventListener('change',renderEditorMonthDetails));
+const fInternalOnly=document.getElementById('fInternalOnly');
+if(fInternalOnly) fInternalOnly.addEventListener('change',()=>{
+  $$('.fAudienceCheck').forEach(c=>c.disabled=fInternalOnly.checked);
+});
+
+
+function saveEditor(){
+  const id=$('#editId').value||('a'+Date.now());
+  const existing=activities.find(x=>x.id===id);
+  const audienceState=syncLegacyProgramFromAudience();
+  const obj={
+    id,
+    name:$('#fName').value.trim()||'Untitled Activity',
+    type:$('#fType').value,
+    program:audienceState.program,
+    audiences:audienceState.audiences,
+    location:$('#fLocation').value.trim(),
+    time:$('#fTime').value,
+    date:$('#fDate').value,
+    days:$$('#dayChecks input:checked').map(x=>Number(x.value)),
+    resident:$('#fResident').checked,
+    highlight:$('#fHighlight').checked,
+    detail:$('#fDetail').value.trim(),
+    changingDetail:$('#fChangingDetail').checked,
+    detailLabel:$('#fDetailLabel').value.trim(),
+    monthlyDetails:existing?.monthlyDetails||{},
+    occurrenceExceptions:existing?.occurrenceExceptions||[],
+    notes:$('#fNotes').value.trim(),
+    rotation:[1,2,3,4,5].map(n=>$('#rot'+n).value.trim()),
+    nth:($$('#fNthChecks input:checked').map(c=>c.value)[0]||'1'),
+    nthWeeks:$$('#fNthChecks input:checked').map(c=>c.value),
+    nthDay:Number($('#fNthDay').value),
+    exceptions:($('#fExceptionMonth').value && $('#fExceptionDate').value) ? [{
+      month:$('#fExceptionMonth').value,
+      date:$('#fExceptionDate').value,
+      time:$('#fExceptionTime').value,
+      note:$('#fExceptionNote').value.trim()
+    }] : []
+  };
+  const monthKey=`${viewYear}-${String(viewMonth+1).padStart(2,'0')}`;
+  obj.monthlyDetails=obj.monthlyDetails||{};
+  if($('#fChangingDetail').checked){
+    obj.monthlyDetails[monthKey]=obj.monthlyDetails[monthKey]||{};
+    $$('.editorMonthFill').forEach(inp=>obj.monthlyDetails[monthKey][inp.dataset.date]=inp.value.trim());
+  }
+  if(existing) Object.assign(existing,obj); else activities.push(obj);
+  save(); renderAll(); activityDialog.close();
+}
+function deleteEditor(){
+  const id=$('#editId').value;if(!id)return;
+  activities=activities.filter(x=>x.id!==id);save();renderAll();activityDialog.close();
+}
+function selectedMonthIso(day=1){return `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`}
+function syncSelectedMonthUI(resetDaily=false){
+  const first=new Date(viewYear,viewMonth,1);
+  const label=first.toLocaleString('en-US',{month:'long',year:'numeric'});
+  const todayBtn=$('#todayMonth'); if(todayBtn) todayBtn.textContent=label;
+  const masterBtn=$('#masterNavBtn'); if(masterBtn) masterBtn.textContent='Master Calendar';
+  const daily=$('#dailyPrintDate');
+  if(daily){
+    const prefix=`${viewYear}-${String(viewMonth+1).padStart(2,'0')}`;
+    if(resetDaily || !String(daily.value||'').startsWith(prefix+'-')) daily.value=selectedMonthIso(1);
+  }
+}
+function refreshSelectedMonth(resetDaily=true){
+  syncSelectedMonthUI(resetDaily);
+  renderMaster();
+  renderWeekSelect();
+  renderPreview();
+  if(currentScreen==='monthlyPreview') renderMonthlyPreview();
+  if(currentScreen==='dailyPreview') renderDailyPreview();
+}
+function renderAll(){
+  syncSelectedMonthUI(false);
+  $$('#activityKindSeg button').forEach(b=>b.classList.toggle('active',b.dataset.listkind===currentListKind));
+  $('#activityKindNote').textContent=currentListKind==='ONGOING'?'Your ongoing activity library. One-time events are kept separately so they do not clutter permanent programs.':currentListKind==='UPCOMING'?'Upcoming special events stay here until their date passes, then move automatically to Past.': 'Past events are kept for reference and can be edited/reused instead of being automatically deleted.';
+  $$('#activityProgramSeg button').forEach(b=>b.classList.toggle('active',b.dataset.listprogram===currentListProgram));
+  $$('#programSeg button').forEach(b=>b.classList.toggle('active',b.dataset.program===currentProgram));
+  renderActivityLibrary();renderMaster();renderWeekSelect();renderPreview();
+}
+
+$$('nav button').forEach(b=>b.onclick=()=>{
+  $$('nav button').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+  $$('.screen').forEach(x=>x.classList.remove('active'));
+  $('#'+b.dataset.screen).classList.add('active'); currentScreen=b.dataset.screen;
+  if(currentScreen==='preview')renderPreview();
+  if(currentScreen==='monthlyPreview')renderMonthlyPreview();
+  if(currentScreen==='dailyPreview')renderDailyPreview();
+});
+$$('#activityKindSeg button').forEach(b=>b.onclick=()=>{
+  currentListKind=b.dataset.listkind;
+  $$('#activityKindSeg button').forEach(x=>x.classList.toggle('active',x===b));
+  $('#activityKindNote').textContent=currentListKind==='ONGOING'?'Your ongoing activity library. One-time events are kept separately so they do not clutter permanent programs.':currentListKind==='UPCOMING'?'Upcoming special events stay here until their date passes, then move automatically to Past.': 'Past events are kept for reference and can be edited/reused instead of being automatically deleted.';
+  renderActivityLibrary();
+});
+
+const activityProgramSeg=document.getElementById('activityProgramSeg');
+if(activityProgramSeg) activityProgramSeg.addEventListener('click',(e)=>{
+  const b=e.target.closest('button[data-listprogram]'); if(!b)return;
+  currentListProgram=b.dataset.listprogram;
+  $$('#activityProgramSeg button').forEach(x=>x.classList.toggle('active',x===b));
+  renderActivityLibrary();
+});
+
+const masterProgramSeg=document.getElementById('programSeg');
+if(masterProgramSeg) masterProgramSeg.addEventListener('click',(e)=>{
+  const b=e.target.closest('button[data-program]'); if(!b)return;
+  $$('#programSeg button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  currentProgram=b.dataset.program;
+  renderMaster();
+});
+$('#occEdit').onclick=()=>startOccAction('edit');
+$('#occMove').onclick=()=>startOccAction('move');
+$('#occReplace').onclick=()=>startOccAction('replace');
+$('#occCancel').onclick=cancelSelectedOccurrence;
+$('#occRestore').onclick=restoreSelectedOccurrence;
+$('#cancelUndoBtn').onclick=undoLastCancellation;
+$('#cancelUndoClose').onclick=hideCancelUndo;
+$('#occSeries').onclick=()=>{occurrenceDialog.close();openEditor(selectedOccurrence.id)};
+$('#saveOccAction').onclick=()=>storeOccurrence(selectedAction);
+$('#fillMonthBtn').onclick=openFillMonth;
+$('#saveFillMonth').onclick=saveFill;
+$('#addActivity').onclick=()=>{
+  openEditor();
+};
+$('#saveActivity').onclick=saveEditor;
+$('#deleteActivity').onclick=deleteEditor;
+$('#resetData').onclick=()=>{ alert('Sample-data reset is disabled in this demo.'); };
+$('#weekSelect').onchange=renderPreview;
+$('#printBtn').onclick=()=>window.print();
+
+$('#prevMonth').onclick=()=>{viewMonth--;if(viewMonth<0){viewMonth=11;viewYear--}refreshSelectedMonth(true)};
+$('#nextMonth').onclick=()=>{viewMonth++;if(viewMonth>11){viewMonth=0;viewYear++}refreshSelectedMonth(true)};
+$('#todayMonth').onclick=()=>{const n=new Date();viewYear=n.getFullYear();viewMonth=n.getMonth();refreshSelectedMonth(true)};
+
+const WEEKLY_STYLE_KEY='activityCottageWeeklyStyleV2';
+const WEEKLY_STYLE_OLD_KEY='activityCottageWeeklyStyleV1';
+const WEEKLY_STYLE_DEFAULTS={
+  titleFont:'Arial, sans-serif', titleSize:'24', residentFontSize:'16', fontFamily:'Arial, sans-serif', textAlign:'left', textColor:'#1f2a24',
+  dayBg:'#8d8f8e', dayText:'#ffffff', dayFontSize:'14', dateBg:'#ffffff', dateText:'#1f2a24',
+  highlightBg:'#f4f0df'
+};
+function currentWeeklyProgram(){return $('#printProgram')?.value||'AL'}
+function getWeeklyStyleStore(){
+  let store={};
+  try{
+    const saved=JSON.parse(localStorage.getItem(WEEKLY_STYLE_KEY)||'null');
+    if(saved&&typeof saved==='object') store=saved;
+    else{
+      const old=JSON.parse(localStorage.getItem(WEEKLY_STYLE_OLD_KEY)||'null');
+      if(old){const migrated=Object.assign({},WEEKLY_STYLE_DEFAULTS,old);store={AL:{...migrated},MC:{...migrated}}}
+    }
+  }catch(e){}
+  if(!store.AL) store.AL={...WEEKLY_STYLE_DEFAULTS};
+  if(!store.MC) store.MC={...WEEKLY_STYLE_DEFAULTS};
+  for(const g of activityLibraryGroups()){
+    if(!store[g.id]) store[g.id]={...WEEKLY_STYLE_DEFAULTS};
+    else store[g.id]=Object.assign({},WEEKLY_STYLE_DEFAULTS,store[g.id]);
+  }
+  return store;
+}
+function getWeeklyStyle(program=currentWeeklyProgram()){return getWeeklyStyleStore()[program]||{...WEEKLY_STYLE_DEFAULTS}}
+function weeklyStyleFromControls(){
+  return {
+    titleFont:$('#weeklyTitleFont')?.value||WEEKLY_STYLE_DEFAULTS.titleFont,
+    titleSize:$('#weeklyTitleSize')?.value||WEEKLY_STYLE_DEFAULTS.titleSize,
+    residentFontSize:$('#printFontSize')?.value||WEEKLY_STYLE_DEFAULTS.residentFontSize,
+    fontFamily:$('#weeklyFontFamily')?.value||WEEKLY_STYLE_DEFAULTS.fontFamily,
+    textAlign:$('#weeklyTextAlign')?.value||WEEKLY_STYLE_DEFAULTS.textAlign,
+    textColor:$('#weeklyTextColor')?.value||WEEKLY_STYLE_DEFAULTS.textColor,
+    dayBg:$('#weeklyDayBg')?.value||WEEKLY_STYLE_DEFAULTS.dayBg,
+    dayText:$('#weeklyDayText')?.value||WEEKLY_STYLE_DEFAULTS.dayText,
+    dayFontSize:$('#weeklyDayFontSize')?.value||WEEKLY_STYLE_DEFAULTS.dayFontSize,
+    dateBg:$('#weeklyDateBg')?.value||WEEKLY_STYLE_DEFAULTS.dateBg,
+    dateText:$('#weeklyDateText')?.value||WEEKLY_STYLE_DEFAULTS.dateText,
+    highlightBg:$('#weeklyHighlightBg')?.value||WEEKLY_STYLE_DEFAULTS.highlightBg
+  };
+}
+function loadWeeklyStyleControls(program=currentWeeklyProgram()){
+  const st=getWeeklyStyle(program);
+  const map={weeklyTitleFont:'titleFont',weeklyTitleSize:'titleSize',weeklyFontFamily:'fontFamily',weeklyTextAlign:'textAlign',weeklyTextColor:'textColor',weeklyDayBg:'dayBg',weeklyDayText:'dayText',weeklyDayFontSize:'dayFontSize',weeklyDateBg:'dateBg',weeklyDateText:'dateText',weeklyHighlightBg:'highlightBg'};
+  Object.entries(map).forEach(([id,key])=>{const el=$('#'+id);if(el)el.value=st[key]});
+  const residentSize=$('#printFontSize'); if(residentSize) residentSize.value=st.residentFontSize||WEEKLY_STYLE_DEFAULTS.residentFontSize;
+}
+function applyWeeklyStyle(){
+  const sheet=$('#printSheet'); if(!sheet) return;
+  const st=getWeeklyStyle();
+  sheet.style.setProperty('--weekly-title-font',st.titleFont);
+  sheet.style.setProperty('--weekly-title-size',st.titleSize+'pt');
+  sheet.style.setProperty('--weekly-font-family',st.fontFamily);
+  sheet.style.setProperty('--weekly-text-align',st.textAlign);
+  sheet.style.setProperty('--weekly-text-color',st.textColor);
+  sheet.style.setProperty('--weekly-day-bg',st.dayBg);
+  sheet.style.setProperty('--weekly-day-text',st.dayText);
+  sheet.style.setProperty('--weekly-day-font-size',st.dayFontSize+'px');
+  sheet.style.setProperty('--weekly-date-bg',st.dateBg);
+  sheet.style.setProperty('--weekly-date-text',st.dateText);
+  sheet.style.setProperty('--weekly-highlight-bg',st.highlightBg);
+}
+function saveWeeklyStyle(){
+  const store=getWeeklyStyleStore();
+  store[currentWeeklyProgram()]=weeklyStyleFromControls();
+  localStorage.setItem(WEEKLY_STYLE_KEY,JSON.stringify(store));
+  applyWeeklyStyle();
+}
+function applyPrintOptions(){
+  const sheet=$('#printSheet');
+  if(!sheet) return;
+  const orientation=$('#printOrientation')?.value||'landscape';
+  const fs=Math.min(16,Math.max(11,Number(getWeeklyStyle().residentFontSize||16)));
+  sheet.classList.remove('landscape','portrait');
+  sheet.classList.add(orientation);
+  sheet.style.setProperty('--resident-font-size',fs+'pt');
+  sheet.style.width=orientation==='portrait'?'8.5in':'11in';
+  sheet.style.minHeight=orientation==='portrait'?'11in':'8.5in';
+  applyWeeklyStyle();
+}
+const printOrientationEl=$('#printOrientation'); if(printOrientationEl) printOrientationEl.onchange=applyPrintOptions;
+const printFontSizeEl=$('#printFontSize'); if(printFontSizeEl) printFontSizeEl.onchange=()=>{saveWeeklyStyle();applyPrintOptions();};
+['weeklyTitleFont','weeklyTitleSize','weeklyFontFamily','weeklyTextAlign','weeklyDayFontSize'].forEach(id=>{const e=$('#'+id);if(e)e.addEventListener('change',saveWeeklyStyle)});
+['weeklyTextColor','weeklyDayBg','weeklyDayText','weeklyDateBg','weeklyDateText','weeklyHighlightBg'].forEach(id=>{const e=$('#'+id);if(e){e.addEventListener('input',saveWeeklyStyle);e.addEventListener('change',saveWeeklyStyle)}});
+const resetWeeklyStyleBtn=$('#resetWeeklyStyle');
+if(resetWeeklyStyleBtn) resetWeeklyStyleBtn.addEventListener('click',()=>{
+  const store=getWeeklyStyleStore(); store[currentWeeklyProgram()]={...WEEKLY_STYLE_DEFAULTS};
+  localStorage.setItem(WEEKLY_STYLE_KEY,JSON.stringify(store)); loadWeeklyStyleControls(); applyWeeklyStyle();
+});
+const copyWeeklyStyleBtn=$('#copyWeeklyStyle');
+if(copyWeeklyStyleBtn) copyWeeklyStyleBtn.addEventListener('click',()=>{
+  const from=currentWeeklyProgram();
+  const choices=activityLibraryGroups().filter(g=>g.id!==from);
+  if(!choices.length){alert('Add another calendar group in Calendar Setup first.');return;}
+  let to=choices[0].id;
+  if(choices.length>1){
+    const menu=choices.map((g,i)=>`${i+1}. ${g.name}`).join('\n');
+    const pick=prompt(`Copy this Weekly style to which calendar?\n\n${menu}\n\nEnter a number:`);
+    const n=Number(pick);
+    if(!Number.isInteger(n)||n<1||n>choices.length)return;
+    to=choices[n-1].id;
+  }
+  const store=getWeeklyStyleStore(); store[from]=weeklyStyleFromControls(); store[to]={...store[from]};
+  localStorage.setItem(WEEKLY_STYLE_KEY,JSON.stringify(store));
+  alert(`Weekly style copied to ${programText(to)}.`);
+});
+loadWeeklyStyleControls();
+
+renderAll();
+
+const po=$('#printOrientation'); if(po) po.addEventListener('change',()=>applyPrintOptions());
+const pf=$('#printFontSize'); if(pf) pf.addEventListener('change',()=>{saveWeeklyStyle();applyPrintOptions();});
+
+function persistMonthlyDetailInputs(root=document){
+  root.querySelectorAll('[data-detail-activity][data-detail-date]').forEach(inp=>{
+    const a=activities.find(x=>x.id===inp.dataset.detailActivity);
+    if(!a) return;
+    a.monthlyDetails=a.monthlyDetails||{};
+    a.monthlyDetails[inp.dataset.detailDate]=inp.value;
+  });
+  save();
+  renderAll();
+}
+
+function saveAllMonthlyDetails(){
+  $$('.detailInput,.monthDetailInput,[data-detail-activity][data-detail-date]').forEach(inp=>{
+    const id=inp.dataset.detailActivity||inp.dataset.id;
+    const key=inp.dataset.detailDate||inp.dataset.date;
+    const a=activities.find(x=>x.id===id);
+    if(a&&key){
+      a.monthlyDetails=a.monthlyDetails||{};
+      a.monthlyDetails[key]=inp.value;
+    }
+  });
+  save();
+  renderAll();
+}
+
+
+
+document.addEventListener('change',e=>{
+  const inp=e.target;
+  if(!(inp.matches('.detailInput,.monthDetailInput,[data-detail-activity][data-detail-date]'))) return;
+  const id=inp.dataset.detailActivity||inp.dataset.id;
+  const key=inp.dataset.detailDate||inp.dataset.date;
+  const a=activities.find(x=>x.id===id);
+  if(a&&key){
+    a.monthlyDetails=a.monthlyDetails||{};
+    a.monthlyDetails[key]=inp.value;
+    save();
+  }
+});
+
+
+
+
+const _po=$('#printOrientation'); if(_po) _po.onchange=()=>applyPrintOptions();
+const _pf=$('#printFontSize'); if(_pf) _pf.onchange=()=>{saveWeeklyStyle();applyPrintOptions();};
+
+</script>
+
+<dialog id="singleFillDialog">
+  <div class="modal-head">
+    <strong id="singleFillTitle">Fill Monthly Details</strong>
+    <button class="x" onclick="singleFillDialog.close()">×</button>
+  </div>
+  <div class="modal-body" style="max-height:70vh;overflow:auto">
+    <div id="singleFillHelp" class="tiny"></div>
+    <div id="singleFillBody" style="margin-top:12px"></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn" onclick="singleFillDialog.close()">Cancel</button>
+    <button class="btn primary" id="saveSingleFill" onclick="saveSingleFill()">Save</button>
+  </div>
+</dialog>
+
+
+<script>
+(function(){
+  const STORAGE_KEY='calendarGardenMCWebDemoIsolatedV2';
+  const STAMP_KEY=STORAGE_KEY+'__lastBackup';
+
+  function stampText(){
+    const el=document.getElementById('lastBackupStamp');
+    if(!el) return;
+    const s=localStorage.getItem(STAMP_KEY);
+    el.textContent=s ? 'Last backup: '+s : 'No backup downloaded yet';
+  }
+
+  function saveBackup(){
+    try{
+      const raw=localStorage.getItem(STORAGE_KEY);
+      if(!raw){ alert('There is no Calendar Builder data to back up yet.'); return; }
+      // Validate before downloading.
+      const parsed=JSON.parse(raw);
+      const payload={
+        format:'Activity Cottage Calendar Builder Backup',
+        version:'3.5',
+        storageKey:STORAGE_KEY,
+        createdAt:new Date().toISOString(),
+        data:parsed
+      };
+      const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      const d=new Date();
+      const pad=n=>String(n).padStart(2,'0');
+      a.href=url;
+      a.download='Activity_Cottage_Calendar_Backup_'+d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'.json';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),1000);
+      const stamp=d.toLocaleString();
+      localStorage.setItem(STAMP_KEY,stamp);
+      stampText();
+    }catch(err){
+      alert('The backup could not be created. Your browser data has not been changed.');
+      console.error(err);
+    }
+  }
+
+  function restoreBackup(file){
+    if(!file) return;
+    const reader=new FileReader();
+    reader.onload=function(){
+      try{
+        const payload=JSON.parse(reader.result);
+        let data;
+        if(payload && payload.format==='Activity Cottage Calendar Builder Backup' && payload.storageKey===STORAGE_KEY && Array.isArray(payload.data)){
+          data=payload.data;
+        }else{
+          throw new Error('This is not a Memory Care Contributor backup.');
+        }
+        if(!confirm('Restore this Memory Care Contributor backup? This will replace your current contributor activities in this browser.')){
+          return;
+        }
+        localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+        alert('Backup restored successfully. The Calendar Builder will reload now.');
+        location.reload();
+      }catch(err){
+        alert('That file does not appear to be a valid Calendar Builder backup. Nothing was changed.');
+        console.error(err);
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  window.addEventListener('DOMContentLoaded',function(){
+    const save=document.getElementById('saveBackupBtn');
+    const restore=document.getElementById('restoreBackupBtn');
+    const picker=document.getElementById('restoreBackupFile');
+    if(save) save.addEventListener('click',saveBackup);
+    if(restore && picker) restore.addEventListener('click',()=>picker.click());
+    if(picker) picker.addEventListener('change',function(){
+      restoreBackup(this.files && this.files[0]);
+      this.value='';
+    });
+    stampText();
+  });
+})();
+</script>
+
+<dialog id="flexDatesSafeDialog"><div style="min-width:min(650px,88vw)">
+<div style="display:flex;justify-content:space-between;gap:16px;align-items:start"><div><div class="eyebrow">FLEXIBLE MONTHLY PROGRAM</div><h2 id="flexDatesSafeTitle" style="margin:4px 0"></h2></div><button type="button" class="btn" id="closeFlexDatesSafe">Close</button></div>
+<p class="tiny">Choose only the date(s) this program will actually happen this month.</p><div id="flexDatesSafeRows"></div>
+<div style="display:flex;justify-content:space-between;gap:8px;margin-top:14px"><button type="button" class="btn" id="addFlexDatesSafeRow">+ Add Date</button><button type="button" class="btn primary" id="saveFlexDatesSafe">Save Dates / Project</button></div>
+</div></dialog>
+<script>
+window.addEventListener('load',function(){
+let activeFlexId=null;const dlg=document.getElementById('flexDatesSafeDialog'),rows=document.getElementById('flexDatesSafeRows');
+const key=()=>`${viewYear}-${String(viewMonth+1).padStart(2,'0')}`;
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;')}
+function addRow(date='',detail=''){const r=document.createElement('div');r.className='flexDatesSafeRow';r.style.cssText='display:grid;grid-template-columns:155px 1fr auto;gap:8px;align-items:center;margin:8px 0';r.innerHTML=`<input type="date" class="flexDatesSafeDate" value="${esc(date)}"><input class="flexDatesSafeDetail" value="${esc(detail)}" placeholder="Project / Activity"><button type="button" class="btn">Remove</button>`;r.querySelector('button').onclick=()=>r.remove();rows.appendChild(r)}
+window.openFlexibleDatesSafe=function(id){const a=activities.find(x=>x.id===id);if(!a)return;activeFlexId=id;rows.innerHTML='';document.getElementById('flexDatesSafeTitle').textContent=`${new Date(viewYear,viewMonth,1).toLocaleString('en-US',{month:'long',year:'numeric'})} — ${a.name}`;const saved=(a.flexibleDatesSafe||{})[key()]||[];saved.length?saved.forEach(x=>addRow(x.date,x.detail)):addRow();dlg.showModal()};
+document.getElementById('closeFlexDatesSafe').onclick=()=>dlg.close();
+document.getElementById('addFlexDatesSafeRow').onclick=()=>addRow();
+document.getElementById('saveFlexDatesSafe').onclick=function(){const a=activities.find(x=>x.id===activeFlexId);if(!a)return;a.flexibleDatesSafe=a.flexibleDatesSafe||{};a.flexibleDatesSafe[key()]=[...document.querySelectorAll('.flexDatesSafeRow')].map(r=>({date:r.querySelector('.flexDatesSafeDate').value,detail:r.querySelector('.flexDatesSafeDetail').value.trim()})).filter(x=>x.date);save();dlg.close();renderAll()};
+const baseInstances=instancesForRange;
+instancesForRange=function(start,end){const result=baseInstances(start,end);activities.filter(a=>a.type==='flexible').forEach(a=>{let m=new Date(start.getFullYear(),start.getMonth(),1),last=new Date(end.getFullYear(),end.getMonth(),1);while(m<=last){const k=`${m.getFullYear()}-${String(m.getMonth()+1).padStart(2,'0')}`;((a.flexibleDatesSafe||{})[k]||[]).forEach(x=>{const d=new Date(x.date+'T12:00:00');if(d>=start&&d<=end)result.push({...a,instanceDate:x.date,detail:x.detail||''})});m=new Date(m.getFullYear(),m.getMonth()+1,1)}});return result.sort((a,b)=>(a.instanceDate+(a.time||'')).localeCompare(b.instanceDate+(b.time||'')))};
+});
+</script>
+
+<script>
+window.addEventListener('load',function(){
+  const previousInstancesForRange=instancesForRange;
+  instancesForRange=function(start,end){
+    const result=previousInstancesForRange(start,end);
+    const existing=new Set(result.map(x=>`${x.id}|${x.instanceDate}`));
+    activities.filter(a=>a.type==='flexible').forEach(a=>{
+      const months=new Set();
+      let cur=new Date(start.getFullYear(),start.getMonth(),1);
+      const last=new Date(end.getFullYear(),end.getMonth(),1);
+      while(cur<=last){
+        months.add(`${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}`);
+        cur=new Date(cur.getFullYear(),cur.getMonth()+1,1);
+      }
+      months.forEach(k=>{
+        ((a.flexibleDatesSafe||{})[k]||[]).forEach(row=>{
+          if(!row.date) return;
+          const d=new Date(row.date+'T12:00:00');
+          const sig=`${a.id}|${row.date}`;
+          if(d>=start && d<=end && !existing.has(sig)){
+            result.push({...a,instanceDate:row.date,detail:row.detail||''});
+            existing.add(sig);
+          }
+        });
+      });
+    });
+    return result.sort((a,b)=>
+      (a.instanceDate+(a.time||'')).localeCompare(b.instanceDate+(b.time||''))
+    );
+  };
+  renderAll();
+});
+
+const MONTHLY_STYLE_KEY='activityCottageMonthlyStyleV1';
+const MONTHLY_STYLE_DEFAULTS={
+  titleFont:'Georgia, serif',titleSize:'60',activityFontSize:'12',fontFamily:'Arial, sans-serif',textAlign:'left',textColor:'#1f2a24',
+  dayBg:'#8d8f8e',dayText:'#ffffff',dayFontSize:'14',dateBg:'#ffffff',dateText:'#1f2a24',highlightBg:'#f4f0df'
+};
+function currentMonthlyProgram(){return document.getElementById('monthlyPrintProgram')?.value||'AL'}
+function getMonthlyStyleStore(){
+  let store={};
+  try{
+    const saved=JSON.parse(localStorage.getItem(MONTHLY_STYLE_KEY)||'null');
+    if(saved&&typeof saved==='object') store=saved;
+  }catch(e){}
+  if(!store.AL) store.AL={...MONTHLY_STYLE_DEFAULTS};
+  if(!store.MC) store.MC={...MONTHLY_STYLE_DEFAULTS};
+  return store;
+}
+function getMonthlyStyle(program=currentMonthlyProgram()){return getMonthlyStyleStore()[program]||{...MONTHLY_STYLE_DEFAULTS}}
+function monthlyStyleFromControls(){
+  return {
+    titleFont:document.getElementById('monthlyTitleFont')?.value||MONTHLY_STYLE_DEFAULTS.titleFont,
+    titleSize:document.getElementById('monthlyTitleSize')?.value||MONTHLY_STYLE_DEFAULTS.titleSize,
+    activityFontSize:document.getElementById('monthlyPrintFontSize')?.value||MONTHLY_STYLE_DEFAULTS.activityFontSize,
+    fontFamily:document.getElementById('monthlyFontFamily')?.value||MONTHLY_STYLE_DEFAULTS.fontFamily,
+    textAlign:document.getElementById('monthlyTextAlign')?.value||MONTHLY_STYLE_DEFAULTS.textAlign,
+    textColor:document.getElementById('monthlyTextColor')?.value||MONTHLY_STYLE_DEFAULTS.textColor,
+    dayBg:document.getElementById('monthlyDayBg')?.value||MONTHLY_STYLE_DEFAULTS.dayBg,
+    dayText:document.getElementById('monthlyDayText')?.value||MONTHLY_STYLE_DEFAULTS.dayText,
+    dayFontSize:document.getElementById('monthlyDayFontSize')?.value||MONTHLY_STYLE_DEFAULTS.dayFontSize,
+    dateBg:document.getElementById('monthlyDateBg')?.value||MONTHLY_STYLE_DEFAULTS.dateBg,
+    dateText:document.getElementById('monthlyDateText')?.value||MONTHLY_STYLE_DEFAULTS.dateText,
+    highlightBg:document.getElementById('monthlyHighlightBg')?.value||MONTHLY_STYLE_DEFAULTS.highlightBg
+  };
+}
+function loadMonthlyStyleControls(program=currentMonthlyProgram()){
+  const st=getMonthlyStyle(program);
+  const map={monthlyTitleFont:'titleFont',monthlyTitleSize:'titleSize',monthlyPrintFontSize:'activityFontSize',monthlyFontFamily:'fontFamily',monthlyTextAlign:'textAlign',monthlyTextColor:'textColor',monthlyDayBg:'dayBg',monthlyDayText:'dayText',monthlyDayFontSize:'dayFontSize',monthlyDateBg:'dateBg',monthlyDateText:'dateText',monthlyHighlightBg:'highlightBg'};
+  Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.value=st[key]});
+}
+function applyMonthlyStyle(){
+  const sheet=document.getElementById('monthlyPrintSheet'); if(!sheet) return;
+  const st=getMonthlyStyle();
+  sheet.style.setProperty('--monthly-font-size',st.activityFontSize+'pt');
+  sheet.style.setProperty('--monthly-title-font',st.titleFont);
+  sheet.style.setProperty('--monthly-title-size',st.titleSize+'pt');
+  sheet.style.setProperty('--monthly-font-family',st.fontFamily);
+  sheet.style.setProperty('--monthly-text-align',st.textAlign);
+  sheet.style.setProperty('--monthly-text-color',st.textColor);
+  sheet.style.setProperty('--monthly-day-bg',st.dayBg);
+  sheet.style.setProperty('--monthly-day-text',st.dayText);
+  sheet.style.setProperty('--monthly-day-font-size',st.dayFontSize+'px');
+  sheet.style.setProperty('--monthly-date-bg',st.dateBg);
+  sheet.style.setProperty('--monthly-date-text',st.dateText);
+  sheet.style.setProperty('--monthly-highlight-bg',st.highlightBg);
+}
+function saveMonthlyStyle(){
+  const store=getMonthlyStyleStore(); store[currentMonthlyProgram()]=monthlyStyleFromControls();
+  localStorage.setItem(MONTHLY_STYLE_KEY,JSON.stringify(store)); applyMonthlyStyle();
+}
+const monthlyProgramEl=document.getElementById('monthlyPrintProgram');
+if(monthlyProgramEl) monthlyProgramEl.addEventListener('change',()=>{loadMonthlyStyleControls();renderMonthlyPreview();applyMonthlyStyle()});
+['monthlyTitleFont','monthlyTitleSize','monthlyPrintFontSize','monthlyFontFamily','monthlyTextAlign','monthlyDayFontSize'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('change',()=>{saveMonthlyStyle();renderMonthlyPreview();applyMonthlyStyle()})});
+['monthlyTextColor','monthlyDayBg','monthlyDayText','monthlyDateBg','monthlyDateText','monthlyHighlightBg'].forEach(id=>{const el=document.getElementById(id);if(el){el.addEventListener('input',saveMonthlyStyle);el.addEventListener('change',saveMonthlyStyle)}});
+const resetMonthlyStyleBtn=document.getElementById('resetMonthlyStyle');
+if(resetMonthlyStyleBtn) resetMonthlyStyleBtn.addEventListener('click',()=>{const store=getMonthlyStyleStore();store[currentMonthlyProgram()]={...MONTHLY_STYLE_DEFAULTS};localStorage.setItem(MONTHLY_STYLE_KEY,JSON.stringify(store));loadMonthlyStyleControls();renderMonthlyPreview();applyMonthlyStyle()});
+const copyMonthlyStyleBtn=document.getElementById('copyMonthlyStyle');
+if(copyMonthlyStyleBtn) copyMonthlyStyleBtn.addEventListener('click',()=>{
+  const from=currentMonthlyProgram(), choices=activityLibraryGroups().filter(g=>g.id!==from);
+  if(!choices.length)return;
+  let to=choices[0].id;
+  if(choices.length>1){
+    const pick=prompt(`Copy this Monthly style to which calendar?\n\n${choices.map((g,i)=>`${i+1}. ${g.name}`).join('\n')}\n\nEnter a number:`);
+    const n=Number(pick); if(!Number.isInteger(n)||n<1||n>choices.length)return;
+    to=choices[n-1].id;
+  }
+  const store=getMonthlyStyleStore();store[from]=monthlyStyleFromControls();store[to]={...store[from]};
+  localStorage.setItem(MONTHLY_STYLE_KEY,JSON.stringify(store));
+});
+const monthlyPrintBtn=document.getElementById('monthlyPrintBtn'); if(monthlyPrintBtn) monthlyPrintBtn.addEventListener('click',()=>window.print());
+loadMonthlyStyleControls(); applyMonthlyStyle();
+
+const DAILY_STYLE_KEY='activityCottageDailyStyleV2';
+const DAILY_STYLE_DEFAULTS={dayFont:'Arial, sans-serif',daySize:'68',dateFont:'Arial, sans-serif',dateSize:'46',headerBg:'#ffffff',headerText:'#1f2a24',activityFontSize:'36',fontFamily:'Arial, sans-serif',textAlign:'left',textColor:'#1f2a24',highlightBg:'#f4f0df'};
+function currentDailyProgram(){return document.getElementById('dailyPrintProgram')?.value||'AL'}
+function getDailyStyleStore(){
+  let store={};
+  try{
+    const saved=JSON.parse(localStorage.getItem(DAILY_STYLE_KEY)||'null');
+    if(saved&&typeof saved==='object') store=saved;
+  }catch(e){}
+  if(!store.AL) store.AL={...DAILY_STYLE_DEFAULTS};
+  if(!store.MC) store.MC={...DAILY_STYLE_DEFAULTS};
+  return store;
+}
+function getDailyStyle(program=currentDailyProgram()){return getDailyStyleStore()[program]||{...DAILY_STYLE_DEFAULTS}}
+function dailyStyleFromControls(){return {
+  dayFont:document.getElementById('dailyDayFont')?.value||DAILY_STYLE_DEFAULTS.dayFont,
+  daySize:document.getElementById('dailyDaySize')?.value||DAILY_STYLE_DEFAULTS.daySize,
+  dateFont:document.getElementById('dailyDateFont')?.value||DAILY_STYLE_DEFAULTS.dateFont,
+  dateSize:document.getElementById('dailyDateSize')?.value||DAILY_STYLE_DEFAULTS.dateSize,
+  headerBg:document.getElementById('dailyHeaderBg')?.value||DAILY_STYLE_DEFAULTS.headerBg,
+  headerText:document.getElementById('dailyHeaderText')?.value||DAILY_STYLE_DEFAULTS.headerText,
+  activityFontSize:document.getElementById('dailyPrintFontSize')?.value||DAILY_STYLE_DEFAULTS.activityFontSize,
+  fontFamily:document.getElementById('dailyFontFamily')?.value||DAILY_STYLE_DEFAULTS.fontFamily,
+  textAlign:document.getElementById('dailyTextAlign')?.value||DAILY_STYLE_DEFAULTS.textAlign,
+  textColor:document.getElementById('dailyTextColor')?.value||DAILY_STYLE_DEFAULTS.textColor,
+  highlightBg:document.getElementById('dailyHighlightBg')?.value||DAILY_STYLE_DEFAULTS.highlightBg
+}}
+function loadDailyStyleControls(program=currentDailyProgram()){
+  const st=getDailyStyle(program);const map={dailyDayFont:'dayFont',dailyDaySize:'daySize',dailyDateFont:'dateFont',dailyDateSize:'dateSize',dailyHeaderBg:'headerBg',dailyHeaderText:'headerText',dailyPrintFontSize:'activityFontSize',dailyFontFamily:'fontFamily',dailyTextAlign:'textAlign',dailyTextColor:'textColor',dailyHighlightBg:'highlightBg'};
+  Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.value=st[key]});
+}
+function applyDailyStyle(){
+  const sheet=document.getElementById('dailyPrintSheet');if(!sheet)return;const st=getDailyStyle();
+  sheet.style.setProperty('--daily-font-size',st.activityFontSize+'pt');sheet.style.setProperty('--daily-day-font',st.dayFont);sheet.style.setProperty('--daily-day-size',st.daySize+'pt');sheet.style.setProperty('--daily-date-font',st.dateFont);sheet.style.setProperty('--daily-date-size',st.dateSize+'pt');sheet.style.setProperty('--daily-header-bg',st.headerBg);sheet.style.setProperty('--daily-header-text',st.headerText);sheet.style.setProperty('--daily-font-family',st.fontFamily);sheet.style.setProperty('--daily-text-align',st.textAlign);sheet.style.setProperty('--daily-text-color',st.textColor);sheet.style.setProperty('--daily-highlight-bg',st.highlightBg);
+}
+function saveDailyStyle(){const store=getDailyStyleStore();store[currentDailyProgram()]=dailyStyleFromControls();localStorage.setItem(DAILY_STYLE_KEY,JSON.stringify(store));applyDailyStyle()}
+const dailyProgramEl=document.getElementById('dailyPrintProgram');if(dailyProgramEl)dailyProgramEl.addEventListener('change',()=>{loadDailyStyleControls();renderDailyPreview();applyDailyStyle()});
+const dailyDateEl=document.getElementById('dailyPrintDate');if(dailyDateEl)dailyDateEl.addEventListener('change',renderDailyPreview);
+['dailyDayFont','dailyDaySize','dailyDateFont','dailyDateSize','dailyPrintFontSize','dailyFontFamily','dailyTextAlign'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('change',()=>{saveDailyStyle();renderDailyPreview();applyDailyStyle()})});
+['dailyHeaderBg','dailyHeaderText','dailyTextColor','dailyHighlightBg'].forEach(id=>{const el=document.getElementById(id);if(el){el.addEventListener('input',saveDailyStyle);el.addEventListener('change',saveDailyStyle)}});
+const resetDailyStyleBtn=document.getElementById('resetDailyStyle');if(resetDailyStyleBtn)resetDailyStyleBtn.addEventListener('click',()=>{const store=getDailyStyleStore();store[currentDailyProgram()]={...DAILY_STYLE_DEFAULTS};localStorage.setItem(DAILY_STYLE_KEY,JSON.stringify(store));loadDailyStyleControls();renderDailyPreview();applyDailyStyle()});
+const copyDailyStyleBtn=document.getElementById('copyDailyStyle');if(copyDailyStyleBtn)copyDailyStyleBtn.addEventListener('click',()=>{
+  const from=currentDailyProgram(),choices=activityLibraryGroups().filter(g=>g.id!==from);
+  if(!choices.length)return;
+  let to=choices[0].id;
+  if(choices.length>1){
+    const pick=prompt(`Copy this Daily style to which calendar?\n\n${choices.map((g,i)=>`${i+1}. ${g.name}`).join('\n')}\n\nEnter a number:`);
+    const n=Number(pick);if(!Number.isInteger(n)||n<1||n>choices.length)return;to=choices[n-1].id;
+  }
+  const store=getDailyStyleStore();store[from]=dailyStyleFromControls();store[to]={...store[from]};
+  localStorage.setItem(DAILY_STYLE_KEY,JSON.stringify(store));
+});
+const dailyPrintBtn=document.getElementById('dailyPrintBtn');if(dailyPrintBtn)dailyPrintBtn.addEventListener('click',()=>window.print());
+loadDailyStyleControls();applyDailyStyle();
+
+
+// ---- Calendar Garden Setup foundation layer (non-destructive) ----
+const CALENDAR_SETUP_KEY='activityCottageCalendarSetupV1';
+const CALENDAR_SETUP_DEFAULTS={communityName:'Spring Gardens',groups:[{id:'AL',name:'Assisted Living',core:true},{id:'MC',name:'Memory Care',core:true},{id:'IL',name:'Independent Living',core:false}],shared:true,staff:true};
+function getCalendarSetup(){
+  try{
+    const x=JSON.parse(localStorage.getItem(CALENDAR_SETUP_KEY)||'null');
+    if(x&&Array.isArray(x.groups)&&x.groups.length>=2){
+      const setup=Object.assign({},CALENDAR_SETUP_DEFAULTS,x);
+      setup.groups=[...x.groups];
+      if(!setup.groups.some(g=>g&&String(g.name||'').trim().toLowerCase()==='independent living')){
+        setup.groups.push({id:'IL',name:'Independent Living',core:false});
+      }
+      return setup;
+    }
+  }catch(e){}
+  return JSON.parse(JSON.stringify(CALENDAR_SETUP_DEFAULTS));
+}
+let calendarSetup=getCalendarSetup();
+function setupGroupName(id,fallback){const g=(calendarSetup.groups||[]).find(x=>x.id===id);return (g&&g.name)||fallback}
+
+function activityLibraryGroups(){
+  return (calendarSetup.groups||[]).filter(g=>g&&g.id&&g.name);
+}
+function rebuildWeeklyProgramOptions(){
+  const sel=document.getElementById('printProgram'); if(!sel)return;
+  const prior=sel.value||'AL';
+  const opts=activityLibraryGroups().map(g=>({id:g.id,label:g.name}));
+  sel.innerHTML=opts.map(x=>`<option value="${x.id}">${x.label}</option>`).join('');
+  sel.value=opts.some(x=>x.id===prior)?prior:(opts[0]?.id||'AL');
+}
+function rebuildDailyProgramOptions(){
+  const sel=document.getElementById('dailyPrintProgram'); if(!sel)return;
+  const prior=sel.value||'AL';
+  const opts=activityLibraryGroups().map(g=>({id:g.id,label:g.name}));
+  sel.innerHTML=opts.map(x=>`<option value="${x.id}">${x.label}</option>`).join('');
+  sel.value=opts.some(x=>x.id===prior)?prior:(opts[0]?.id||'AL');
+}
+function rebuildMonthlyProgramOptions(){
+  const sel=document.getElementById('monthlyPrintProgram'); if(!sel)return;
+  const prior=sel.value||'AL';
+  const opts=activityLibraryGroups().map(g=>({id:g.id,label:g.name}));
+  sel.innerHTML=opts.map(x=>`<option value="${x.id}">${x.label}</option>`).join('');
+  sel.value=opts.some(x=>x.id===prior)?prior:(opts[0]?.id||'AL');
+}
+
+function rebuildMasterProgramTabs(){
+  const host=document.getElementById('programSeg'); if(!host)return;
+  const al=setupGroupName('AL','Assisted Living'), mc=setupGroupName('MC','Memory Care');
+  const parts=[{id:'AL',label:al},{id:'MC',label:mc}];
+  activityLibraryGroups().filter(g=>!['AL','MC'].includes(g.id)).forEach(g=>parts.push({id:g.id,label:g.name}));
+  if(calendarSetup.staff!==false) parts.push({id:'INTERNAL',label:'Staff / Planning'});
+  parts.push({id:'ALL',label:'View All'});
+  const valid=new Set(parts.map(x=>x.id));
+  if(!valid.has(currentProgram)) currentProgram='AL';
+  host.innerHTML=parts.map(x=>`<button data-program="${x.id}" class="${x.id===currentProgram?'active':''}">${x.label}</button>`).join('');
+}
+
+function rebuildActivityProgramTabs(){
+  const host=document.getElementById('activityProgramSeg'); if(!host)return;
+  const al=setupGroupName('AL','Assisted Living'), mc=setupGroupName('MC','Memory Care');
+  const parts=[
+    {id:'AL',label:al},
+    {id:'MC',label:mc}
+  ];
+  activityLibraryGroups().filter(g=>!['AL','MC'].includes(g.id)).forEach(g=>parts.push({id:g.id,label:g.name}));
+  if(calendarSetup.staff!==false) parts.push({id:'INTERNAL',label:'Staff / Planning'});
+  parts.push({id:'ALL',label:'View All'});
+  const valid=new Set(parts.map(x=>x.id));
+  if(!valid.has(currentListProgram)) currentListProgram='AL';
+  host.innerHTML=parts.map(x=>`<button data-listprogram="${x.id}" class="${x.id===currentListProgram?'active':''}">${x.label}</button>`).join('');
+}
+function rebuildEditorProgramOptions(){
+  const sel=document.getElementById('fProgram'); if(!sel)return;
+  const prior=sel.value;
+  const al=setupGroupName('AL','Assisted Living'), mc=setupGroupName('MC','Memory Care');
+  const opts=[
+    {id:'AL',label:al},
+    {id:'MC',label:mc},
+    {id:'BOTH',label:`Shared ${al} + ${mc}`}
+  ];
+  activityLibraryGroups().filter(g=>!['AL','MC'].includes(g.id)).forEach(g=>opts.push({id:g.id,label:g.name}));
+  if(calendarSetup.staff!==false) opts.push({id:'INTERNAL',label:'Staff / Planning'});
+  sel.innerHTML=opts.map(x=>`<option value="${x.id}">${x.label}</option>`).join('');
+  if(opts.some(x=>x.id===prior)) sel.value=prior;
+}
+function applyCalendarSetupLabels(){
+  const community=(calendarSetup.communityName||'').trim()||'My Community';
+  const al=setupGroupName('AL','Assisted Living'), mc=setupGroupName('MC','Memory Care');
+  const title=document.getElementById('appMainTitle');if(title)title.textContent=`Calendar Garden — ${community}`;
+  const lib=document.querySelector('#activity h2');if(lib)lib.textContent=`${community} Activity Library`;
+  document.querySelectorAll('[data-program="AL"],[data-listprogram="AL"]').forEach(x=>x.textContent=al);
+  document.querySelectorAll('[data-program="MC"],[data-listprogram="MC"]').forEach(x=>x.textContent=mc);
+  document.querySelectorAll('[data-program="BOTH"],[data-listprogram="BOTH"]').forEach(x=>x.textContent=`Shared ${al} + ${mc}`);
+  const opts=[['weeklyPrintProgram','AL',al],['weeklyPrintProgram','MC',mc],['monthlyPrintProgram','AL',al],['monthlyPrintProgram','MC',mc],['dailyPrintProgram','AL',al],['dailyPrintProgram','MC',mc]];
+  opts.forEach(([id,val,label])=>{const el=document.getElementById(id);if(!el)return;const o=[...el.options].find(z=>z.value===val);if(o)o.textContent=label});
+  rebuildWeeklyProgramOptions();
+  rebuildMonthlyProgramOptions();
+  rebuildDailyProgramOptions();
+  rebuildMasterProgramTabs();
+  rebuildActivityProgramTabs();
+  rebuildEditorProgramOptions();
+  renderActivityLibrary();
+}
+function renderCalendarSetup(reload=true){
+  if(reload) calendarSetup=getCalendarSetup();
+  const name=document.getElementById('setupCommunityName');if(!name)return;name.value=calendarSetup.communityName||'';
+  document.getElementById('setupShared').checked=calendarSetup.shared!==false;
+  document.getElementById('setupStaff').checked=calendarSetup.staff!==false;
+  const host=document.getElementById('setupGroups');host.innerHTML='';
+  (calendarSetup.groups||[]).forEach((g,i)=>{
+    const row=document.createElement('div');row.style.cssText='display:grid;grid-template-columns:130px 1fr auto;gap:10px;align-items:center;margin:9px 0;max-width:650px';
+    const tag=document.createElement('div');tag.className='tiny';tag.style.fontWeight='800';tag.textContent=g.core?(i===0?'Primary Group 1':'Primary Group 2'):'Additional Group';
+    const inp=document.createElement('input');inp.type='text';inp.value=g.name||'';inp.dataset.setupGroup=i;inp.placeholder='Group name';
+    row.append(tag,inp);
+    if(!g.core){const del=document.createElement('button');del.className='btn soft';del.type='button';del.textContent='Remove';del.onclick=()=>{calendarSetup.groups.splice(i,1);renderCalendarSetupDraft()};row.append(del)}else{const lock=document.createElement('span');lock.className='tiny';lock.textContent='Core';row.append(lock)}
+    host.append(row);
+  });
+  if((calendarSetup.groups||[]).some(g=>!g.core)){const n=document.createElement('div');n.className='tiny';n.style.margin='8px 0 14px';n.textContent='Choose exactly which resident calendars should receive each activity. Weekly Print Preview follows those selections; Monthly and Daily remain protected for now.';host.append(n)}
+}
+function captureSetupDraft(){
+  const inputs=[...document.querySelectorAll('[data-setup-group]')];
+  inputs.forEach(inp=>{const i=Number(inp.dataset.setupGroup);if(calendarSetup.groups[i])calendarSetup.groups[i].name=inp.value.trim()||`Group ${i+1}`});
+  calendarSetup.communityName=(document.getElementById('setupCommunityName')?.value||'').trim()||'My Community';
+  calendarSetup.shared=!!document.getElementById('setupShared')?.checked;calendarSetup.staff=!!document.getElementById('setupStaff')?.checked;
+}
+function renderCalendarSetupDraft(){renderCalendarSetup(false);}
+const setupAdd=document.getElementById('setupAddGroup');if(setupAdd)setupAdd.onclick=()=>{captureSetupDraft();calendarSetup.groups.push({id:'CUSTOM_'+Date.now(),name:'New Calendar Group',core:false});renderCalendarSetupDraft()};
+const setupSave=document.getElementById('setupSave');if(setupSave)setupSave.onclick=()=>{captureSetupDraft();localStorage.setItem(CALENDAR_SETUP_KEY,JSON.stringify(calendarSetup));applyCalendarSetupLabels();renderCalendarSetup();const m=document.getElementById('setupSaved');m.textContent='✓ Setup saved';setTimeout(()=>{m.textContent=''},2200)};
+const setupReset=document.getElementById('setupReset');
+if(setupReset){
+  setupReset.addEventListener('click',(e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    const freshDefaults={
+      communityName:'Spring Gardens',
+      groups:[
+        {id:'AL',name:'Assisted Living',core:true},
+        {id:'MC',name:'Memory Care',core:true},
+        {id:'IL',name:'Independent Living',core:false}
+      ],
+      shared:true,
+      staff:true
+    };
+    calendarSetup=freshDefaults;
+    localStorage.removeItem(CALENDAR_SETUP_KEY);
+    localStorage.setItem(CALENDAR_SETUP_KEY,JSON.stringify(freshDefaults));
+    renderCalendarSetup(false);
+    applyCalendarSetupLabels();
+    const m=document.getElementById('setupSaved');
+    if(m){
+      m.textContent='✓ Restored: Spring Gardens / Assisted Living / Memory Care';
+      setTimeout(()=>{m.textContent=''},4000);
+    }
+  });
+}
+renderCalendarSetup();applyCalendarSetupLabels();
+
+window.addEventListener('beforeprint',()=>{
+  if(currentScreen==='monthlyPreview'){
+    document.body.classList.add('printing-monthly');
+  }else if(currentScreen==='dailyPreview'){
+    document.body.classList.add('printing-daily');
+  }
+});
+window.addEventListener('afterprint',()=>document.body.classList.remove('printing-monthly','printing-daily'));
+</script>
+
+<script id="mcCollabScript">
+(()=>{
+const contributor=!!document.body.dataset.mcContributor;
+const STORAGE='activityCottageCalendarPrototypeV31';
+const KEY='calendarGardenMCWebDemoIsolatedV2';
+const marker='activity-cottage-mc-submission-v1';
+const deep=v=>JSON.parse(JSON.stringify(v));
+const iso=()=>new Date().toISOString();
+const download=(data,name)=>{const b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),3000)};
+const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const mc=a=>a.program==='MC' || (Array.isArray(a.audiences)&&a.audiences.includes('MC')&&a.program!=='INTERNAL');
+const pure=a=>mc(a)&&!(Array.isArray(a.audiences)&&a.audiences.some(g=>g!=='MC'))&&a.program!=='BOTH';
+function own(a){const c=deep(a);c.program='MC';c.audiences=['MC'];c.resident=true;return c}
+function initContributor(){
+ document.body.classList.add('mc-contributor');
+ const nav=document.querySelector('nav');nav?.querySelectorAll('button[data-screen="setup"]').forEach(x=>x.remove());
+ const banner=document.createElement('div');banner.className='mc-collab no-print';banner.innerHTML='<h3>🌿 Memory Care — Web Readiness Demo (Fictional Data Only)</h3><p>Plan Memory Care activities here, including monthly details and occurrence changes. This is a separate browser workspace. It does not edit the main Spring Gardens calendar.</p><p><b>Staff pilot:</b> Add and update your Memory Care activities, use Fill This Month for the specific plans on each date, and export a submission when ready. Save a backup at the end of each planning session. Use the same browser and computer for your work; your changes do not automatically sync between devices.</p><button type="button" class="btn primary" id="mcSubmit">⬇ Export Memory Care Submission</button><button type="button" class="btn soft" id="mcContributorBackup">Save My Backup</button><p class="tiny">Export includes your complete Memory Care activity list; the manager reviews changes individually before importing. Send the exported JSON file to your manager. This pilot starts with an empty activity list in a new browser workspace. Do not include resident-identifying information.</p>';
+ document.querySelector('#master .toolbar')?.before(banner);
+ const preventOther=()=>{currentProgram='MC';currentListProgram='MC';document.querySelectorAll('#printProgram,#monthlyPrintProgram,#dailyPrintProgram').forEach(s=>{s.value='MC';s.querySelectorAll('option:not([value="MC"])').forEach(o=>o.remove())});renderAll();renderMonthlyPreview();renderDailyPreview()};
+ document.querySelectorAll('#programSeg button:not([data-program="MC"]),#activityProgramSeg button:not([data-listprogram="MC"])').forEach(x=>x.remove());
+ document.querySelector('#addActivity')?.addEventListener('click',()=>setTimeout(()=>{document.querySelectorAll('#fAudienceGroups input').forEach(x=>{x.checked=x.value==='MC';x.disabled=x.value!=='MC'});const f=document.querySelector('#fInternalOnly');if(f){f.checked=false;f.disabled=true}},0));
+
+ document.querySelector('#mcSubmit').onclick=()=>{const items=activities.filter(mc).map(own);download({format:marker,submissionId:'mc-'+Date.now(),createdAt:iso(),source:'Memory Care Contributor',activities:items},'Memory_Care_Submission_'+new Date().toISOString().slice(0,10)+'.json')};
+ document.querySelector('#mcContributorBackup').onclick=()=>download({format:'mc-contributor-backup-v1',savedAt:iso(),activities:activities.filter(mc)},'Memory_Care_Contributor_Backup.json');
+ preventOther();
+}
+if(contributor)initContributor();
+})();
+</script>
+</body>
+</html>
+
+<style>
+.monthly-day.outside{background:#fff;color:transparent}
+.daily-head{padding-top:10px;padding-bottom:22px}
+
+.cancel-undo-toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,18px);z-index:9999;display:flex;align-items:center;gap:12px;max-width:min(680px,calc(100vw - 32px));padding:11px 14px;border:1px solid #d98a84;border-radius:12px;background:#fff7f6;color:#63231f;box-shadow:0 8px 26px rgba(0,0,0,.18);opacity:0;pointer-events:none;transition:.18s ease;font-weight:700}
+.cancel-undo-toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.cancel-undo-toast button{border:0;background:transparent;color:#9b3029;font:inherit;font-weight:900;cursor:pointer;padding:3px 5px}
+.cancel-undo-toast #cancelUndoBtn{text-decoration:underline}
+.cancel-undo-toast #cancelUndoClose{font-size:20px;line-height:1;text-decoration:none}
+</style>
